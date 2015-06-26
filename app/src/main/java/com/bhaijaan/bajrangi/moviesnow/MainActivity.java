@@ -146,7 +146,7 @@ public class MainActivity extends ListActivity {
                             .authority(DATASOURCE_URL)
                             .path(SCHEDULE_LIST_PATH)
                             .appendQueryParameter(USER_ID, "0")
-                            .appendQueryParameter(CHANNEL_LIST, response.replace(" ", "%20"))
+                            .appendQueryParameter(CHANNEL_LIST, response)
                             .appendQueryParameter(CHANNEL_LIST_FROM_DATE, fromDate)
                             .appendQueryParameter(CHANNEL_LIST_TO_DATE, toDate)
                             .build()
