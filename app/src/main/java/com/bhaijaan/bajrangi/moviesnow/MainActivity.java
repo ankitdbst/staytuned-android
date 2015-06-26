@@ -65,10 +65,10 @@ public class MainActivity extends ListActivity {
     public static final String TAG_PROGRAMME_STOP = "stop";
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
-    private ProgressDialog pDialog;
     private static MySingleton mInstance;
+    private ProgressDialog pDialog;
 
-    private static class MySingleton {
+    public static class MySingleton {
         private RequestQueue mRequestQueue;
         private ImageLoader mImageLoader;
         private static Context mCtx;
@@ -77,7 +77,7 @@ public class MainActivity extends ListActivity {
             mCtx = context;
             mRequestQueue = getRequestQueue();
 
-            ImageLoader mImageLoader = new ImageLoader(mRequestQueue, new LruBitmapCache(
+            mImageLoader = new ImageLoader(mRequestQueue, new LruBitmapCache(
                     LruBitmapCache.getCacheSize(context)));
         }
 
@@ -183,6 +183,9 @@ public class MainActivity extends ListActivity {
                                                         .getString(TAG_PROGRAMME_GENRE));
                                         programme.put(TAG_CHANNEL_NAME,
                                                 channelObj.getString(TAG_CHANNEL_NAME));
+                                        programme.put(TAG_PROGRAMME_IMAGE_URL,
+                                                programmes.getJSONObject(j)
+                                                        .getString(TAG_PROGRAMME_IMAGE_URL));
 
                                         String startTime = programmes.getJSONObject(j)
                                                 .getString(TAG_PROGRAMME_START);
@@ -197,22 +200,8 @@ public class MainActivity extends ListActivity {
 
                                 // Now create a new list adapter bound to the cursor.
                                 // SimpleListAdapter is designed for binding to a Cursor.
-                                ListAdapter adapter = new SimpleAdapter(
-                                        MainActivity.this,
-                                        programmeList,
-                                        R.layout.list_item,
-                                        new String[] {
-                                                TAG_PROGRAMME_TITLE,
-                                                TAG_PROGRAMME_GENRE,
-                                                TAG_CHANNEL_NAME,
-                                                TAG_PROGRAMME_START
-                                        },
-                                        new int[] {
-                                                R.id.title,
-                                                R.id.genre,
-                                                R.id.channelname,
-                                                R.id.starttime
-                                        });
+                                ListAdapter adapter =
+                                        new ProgrammesAdapter(MainActivity.this, programmeList);
 
                                 // Bind to our new adapter.
                                 setListAdapter(adapter);
