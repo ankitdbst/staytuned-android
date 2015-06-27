@@ -13,15 +13,15 @@ import com.android.volley.toolbox.NetworkImageView;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ProgrammesAdapter extends ArrayAdapter<HashMap<String, String>> {
-    public ProgrammesAdapter(Context context, ArrayList<HashMap<String, String>> users) {
+public class ProgrammesAdapter extends ArrayAdapter<Programme> {
+    public ProgrammesAdapter(Context context, ArrayList<Programme> users) {
         super(context, 0, users);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // Get the data item for this position
-        HashMap<String, String> programme = getItem(position);
+        Programme programme = getItem(position);
         // Check if an existing view is being reused, otherwise inflate the view
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext())
@@ -41,13 +41,13 @@ public class ProgrammesAdapter extends ArrayAdapter<HashMap<String, String>> {
 
         // Set the URL of the image that should be loaded into this view, and
         // specify the ImageLoader that will be used to make the request.
-        mNetworkImageView.setImageUrl(programme.get(MainActivity.TAG_PROGRAMME_IMAGE_URL), mImageLoader);
+        mNetworkImageView.setImageUrl(programme.getThumbnailUrl(), mImageLoader);
 
         // Populate the data into the template view using the data object
-        title.setText(programme.get(MainActivity.TAG_PROGRAMME_TITLE));
-        genre.setText(programme.get(MainActivity.TAG_PROGRAMME_GENRE));
-        channelName.setText(programme.get(MainActivity.TAG_CHANNEL_NAME));
-        startTime.setText(programme.get(MainActivity.TAG_PROGRAMME_START));
+        title.setText(programme.getTitle());
+        genre.setText(programme.getGenre());
+        channelName.setText(programme.getChannelName());
+        startTime.setText(programme.getStart().toLocaleString());
 
         // Return the completed view to render on screen
         return convertView;

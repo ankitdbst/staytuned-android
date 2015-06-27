@@ -34,6 +34,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -161,42 +163,34 @@ public class MainActivity extends ListActivity {
                                 JSONArray channels = response.getJSONObject(TAG_SCHEDULE).
                                         getJSONArray(TAG_CHANNEL);
 
-                                ArrayList<HashMap<String, String>> programmeList =
-                                        new ArrayList<HashMap<String, String>>();
+                                ArrayList<Programme> programmeList =
+                                        new ArrayList<Programme>();
 
                                 for (int i = 0; i < channels.length(); ++i) {
                                     JSONObject channelObj = channels.getJSONObject(i);
                                     JSONArray programmes = channelObj.getJSONArray(TAG_PROGRAMME);
 
                                     for (int j = 0; j < programmes.length(); ++j) {
-                                        HashMap<String, String> programme = new HashMap<>();
-
+                                        JSONObject programmeObj = programmes.getJSONObject(j);
                                         String title =
-                                                Html.fromHtml(programmes.getJSONObject(j)
+                                                Html.fromHtml(programmeObj
                                                         .getString(TAG_PROGRAMME_TITLE)).toString();
                                         title = Html.fromHtml(title).toString();
 
-                                        programme.put(TAG_PROGRAMME_TITLE,
-                                                title);
-                                        programme.put(TAG_PROGRAMME_GENRE,
-                                                programmes.getJSONObject(j)
-                                                        .getString(TAG_PROGRAMME_GENRE));
-                                        programme.put(TAG_CHANNEL_NAME,
-                                                channelObj.getString(TAG_CHANNEL_NAME));
-                                        programme.put(TAG_PROGRAMME_IMAGE_URL,
-                                                programmes.getJSONObject(j)
-                                                        .getString(TAG_PROGRAMME_IMAGE_URL));
-
-                                        String startTime = programmes.getJSONObject(j)
-                                                .getString(TAG_PROGRAMME_START);
-                                        DateFormat format = new SimpleDateFormat("yyyyMMddHHmm",
-                                                Locale.ENGLISH);
-                                        Date date = format.parse(startTime);
-                                        programme.put(TAG_PROGRAMME_START,
-                                               date.toLocaleString());
-                                        programmeList.add(programme);
+                                        Programme p = new Programme();
+                                        p.setTitle(title);
+                                        p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
+                                        p.setStop(programmeObj.getString(TAG_PROGRAMME_STOP));
+                                        p.setDuration(programmeObj.getInt(TAG_PROGRAMME_DURATION));
+                                        p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
+                                        p.setThumbnailUrl(programmeObj.
+                                                getString(TAG_PROGRAMME_IMAGE_URL));
+                                        p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
+                                        programmeList.add(p);
                                     }
                                 }
+
+                                Collections.sort(programmeList, Programme.getCompByStartTime());
 
                                 // Now create a new list adapter bound to the cursor.
                                 // SimpleListAdapter is designed for binding to a Cursor.
@@ -205,7 +199,7 @@ public class MainActivity extends ListActivity {
 
                                 // Bind to our new adapter.
                                 setListAdapter(adapter);
-                            } catch (JSONException | ParseException e) {
+                            } catch (JSONException e) {
                                 e.printStackTrace();
                             }
 
