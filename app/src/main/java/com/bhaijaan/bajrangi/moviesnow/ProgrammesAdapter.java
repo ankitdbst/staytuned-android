@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.android.volley.toolbox.ImageLoader;
@@ -13,18 +14,37 @@ import com.android.volley.toolbox.NetworkImageView;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class ProgrammesAdapter extends ArrayAdapter<Programme> {
-    public ProgrammesAdapter(Context context, ArrayList<Programme> users) {
-        super(context, 0, users);
+public class ProgrammesAdapter extends BaseAdapter {
+    Context context;
+    ArrayList<Programme> programmeArrayList;
+
+    public ProgrammesAdapter(Context context, ArrayList<Programme> programmes) {
+        this.context = context;
+        this.programmeArrayList = programmes;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return programmeArrayList.get(position);
+    }
+
+    @Override
+    public int getCount() {
+        return programmeArrayList.size();
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // Get the data item for this position
-        Programme programme = getItem(position);
+        Programme programme = (Programme) getItem(position);
         // Check if an existing view is being reused, otherwise inflate the view
         if (convertView == null) {
-            convertView = LayoutInflater.from(getContext())
+            convertView = LayoutInflater.from(context)
                     .inflate(R.layout.list_item, parent, false);
         }
 
@@ -37,7 +57,7 @@ public class ProgrammesAdapter extends ArrayAdapter<Programme> {
         NetworkImageView mNetworkImageView = (NetworkImageView) convertView.findViewById(R.id.thumbnail);
 
         // Get the ImageLoader through your singleton class.
-        ImageLoader mImageLoader = MainActivity.MySingleton.getInstance(getContext()).getImageLoader();
+        ImageLoader mImageLoader = MainActivity.MySingleton.getInstance(context).getImageLoader();
 
         // Set the URL of the image that should be loaded into this view, and
         // specify the ImageLoader that will be used to make the request.

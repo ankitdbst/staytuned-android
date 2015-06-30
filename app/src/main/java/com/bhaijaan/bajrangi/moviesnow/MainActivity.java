@@ -8,8 +8,10 @@ import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Html;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AbsListView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -69,6 +71,13 @@ public class MainActivity extends ListActivity {
 
     private static MySingleton mInstance;
     private ProgressDialog pDialog;
+    private ArrayList<Programme> programmeList;
+    private ProgrammesAdapter adapter;
+    private boolean loading = false;
+    private String channelList;
+    private RequestQueue requestQueue;
+    private int pageCount = 1;
+    private Calendar start;
 
     public static class MySingleton {
         private RequestQueue mRequestQueue;
@@ -111,7 +120,6 @@ public class MainActivity extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         // Showing progress dialog
         pDialog = new ProgressDialog(MainActivity.this);
@@ -119,8 +127,34 @@ public class MainActivity extends ListActivity {
         pDialog.setCancelable(false);
         pDialog.show();
 
+        setContentView(R.layout.activity_main);
+
+        // Create a Programmes Adapter to retrieve the list of programmes
+        programmeList = new ArrayList<>();
+        adapter = new ProgrammesAdapter(MainActivity.this, programmeList);
+
+        ListView listView = getListView();
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem,
+                                 int visibleItemCount, int totalItemCount) {
+                if (firstVisibleItem + visibleItemCount == totalItemCount && totalItemCount != 0) {
+                    if (!loading) {
+                        loadData();
+                    }
+                }
+            }
+        });
+
+        // Bind to our new adapter.
+        setListAdapter(adapter);
+
         // Get a RequestQueue
-        final RequestQueue queue = MySingleton.getInstance(this.getApplicationContext()).
+        requestQueue = MySingleton.getInstance(this.getApplicationContext()).
                 getRequestQueue();
 
         // Formulate the request and handle the response.
@@ -138,85 +172,8 @@ public class MainActivity extends ListActivity {
             new Response.Listener<String>() {
                 @Override
                 public void onResponse(String response) {
-                    String fromDate = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH)
-                            .format(Calendar.getInstance().getTime());
-                    String toDate = new SimpleDateFormat("yyyMMdd2359", Locale.ENGLISH)
-                            .format(Calendar.getInstance().getTime());
-                    // Do something with the response
-                    String url = new Uri.Builder()
-                            .scheme("http")
-                            .authority(DATASOURCE_URL)
-                            .path(SCHEDULE_LIST_PATH)
-                            .appendQueryParameter(USER_ID, "0")
-                            .appendQueryParameter(CHANNEL_LIST, response)
-                            .appendQueryParameter(CHANNEL_LIST_FROM_DATE, fromDate)
-                            .appendQueryParameter(CHANNEL_LIST_TO_DATE, toDate)
-                            .build()
-                            .toString();
-
-                    JsonObjectRequest jsObjRequest = new JsonObjectRequest
-                        (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            try {
-                                JSONArray channels = response.getJSONObject(TAG_SCHEDULE).
-                                        getJSONArray(TAG_CHANNEL);
-
-                                ArrayList<Programme> programmeList =
-                                        new ArrayList<Programme>();
-
-                                for (int i = 0; i < channels.length(); ++i) {
-                                    JSONObject channelObj = channels.getJSONObject(i);
-                                    JSONArray programmes = channelObj.getJSONArray(TAG_PROGRAMME);
-
-                                    for (int j = 0; j < programmes.length(); ++j) {
-                                        JSONObject programmeObj = programmes.getJSONObject(j);
-                                        String title =
-                                                Html.fromHtml(programmeObj
-                                                        .getString(TAG_PROGRAMME_TITLE)).toString();
-                                        title = Html.fromHtml(title).toString();
-
-                                        Programme p = new Programme();
-                                        p.setTitle(title);
-                                        p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
-                                        p.setStop(programmeObj.getString(TAG_PROGRAMME_STOP));
-                                        p.setDuration(programmeObj.getInt(TAG_PROGRAMME_DURATION));
-                                        p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
-                                        p.setThumbnailUrl(programmeObj.
-                                                getString(TAG_PROGRAMME_IMAGE_URL));
-                                        p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
-                                        programmeList.add(p);
-                                    }
-                                }
-
-                                Collections.sort(programmeList, Programme.getCompByStartTime());
-
-                                // Now create a new list adapter bound to the cursor.
-                                // SimpleListAdapter is designed for binding to a Cursor.
-                                ListAdapter adapter =
-                                        new ProgrammesAdapter(MainActivity.this, programmeList);
-
-                                // Bind to our new adapter.
-                                setListAdapter(adapter);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-
-                            if (pDialog.isShowing())
-                                pDialog.dismiss();
-                        }
-                    }, new Response.ErrorListener() {
-
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            // TODO Auto-generated method stub
-                            if (pDialog.isShowing())
-                                pDialog.dismiss();
-                        }
-                    });
-
-                    queue.add(jsObjRequest);
+                    channelList = response;
+                    loadData();
                 }
             },
             new Response.ErrorListener() {
@@ -228,7 +185,84 @@ public class MainActivity extends ListActivity {
                 }
             });
 
-        queue.add(channelListRequest);
+        requestQueue.add(channelListRequest);
+    }
+
+    private void loadData() {
+        DateFormat formatter = new SimpleDateFormat("yyyMMddHHmm", Locale.ENGLISH);
+
+        String fromDate = formatter.format(start.getTime());
+        // Retrieve all the listings from t to t+3*pageCount hours
+        start.add(Calendar.HOUR_OF_DAY, 3);
+        String toDate = formatter.format(start.getTime());
+
+        String url = new Uri.Builder()
+                .scheme("http")
+                .authority(DATASOURCE_URL)
+                .path(SCHEDULE_LIST_PATH)
+                .appendQueryParameter(USER_ID, "0")
+                .appendQueryParameter(CHANNEL_LIST, channelList)
+                .appendQueryParameter(CHANNEL_LIST_FROM_DATE, fromDate)
+                .appendQueryParameter(CHANNEL_LIST_TO_DATE, toDate)
+                .build()
+                .toString();
+
+        JsonObjectRequest jsObjRequest = new JsonObjectRequest
+        (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    JSONArray channels = response.getJSONObject(TAG_SCHEDULE).
+                            getJSONArray(TAG_CHANNEL);
+
+                    ArrayList<Programme> list = 
+                            new ArrayList<Programme>();
+
+                    for (int i = 0; i < channels.length(); ++i) {
+                        JSONObject channelObj = channels.getJSONObject(i);
+                        JSONArray programmes = channelObj.getJSONArray(TAG_PROGRAMME);
+
+                        for (int j = 0; j < programmes.length(); ++j) {
+                            JSONObject programmeObj = programmes.getJSONObject(j);
+                            String title =
+                                    Html.fromHtml(programmeObj
+                                            .getString(TAG_PROGRAMME_TITLE)).toString();
+                            title = Html.fromHtml(title).toString();
+
+                            Programme p = new Programme();
+                            p.setTitle(title);
+                            p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
+                            p.setStop(programmeObj.getString(TAG_PROGRAMME_STOP));
+                            p.setDuration(programmeObj.getInt(TAG_PROGRAMME_DURATION));
+                            p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
+                            p.setThumbnailUrl(programmeObj.
+                                    getString(TAG_PROGRAMME_IMAGE_URL));
+                            p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
+                            list.add(p);
+                        }
+                    }
+
+                    Collections.sort(list, Programme.getCompByStartTime());
+                    programmeList.addAll(list);
+                    adapter.notifyDataSetChanged();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                if (pDialog.isShowing())
+                    pDialog.dismiss();
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // TODO Auto-generated method stub
+                if (pDialog.isShowing())
+                    pDialog.dismiss();
+            }
+        });
+
+        requestQueue.add(jsObjRequest);
     }
 
     @Override
