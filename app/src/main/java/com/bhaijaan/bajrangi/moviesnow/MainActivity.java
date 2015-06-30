@@ -69,7 +69,13 @@ public class MainActivity extends ListActivity {
     public static final String TAG_PROGRAMME_STOP = "stop";
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
+    final private DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
+    final private DateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
+
     private static MySingleton mInstance;
+
+    private final Calendar start = Calendar.getInstance();
+
     private ProgressDialog pDialog;
     private ArrayList<Programme> programmeList;
     private ProgrammesAdapter adapter;
@@ -77,7 +83,7 @@ public class MainActivity extends ListActivity {
     private String channelList;
     private RequestQueue requestQueue;
     private int pageCount = 1;
-    private Calendar start;
+
 
     public static class MySingleton {
         private RequestQueue mRequestQueue;
@@ -144,6 +150,7 @@ public class MainActivity extends ListActivity {
                                  int visibleItemCount, int totalItemCount) {
                 if (firstVisibleItem + visibleItemCount == totalItemCount && totalItemCount != 0) {
                     if (!loading) {
+                        loading = true;
                         loadData();
                     }
                 }
@@ -173,6 +180,7 @@ public class MainActivity extends ListActivity {
                 @Override
                 public void onResponse(String response) {
                     channelList = response;
+                    loading = true;
                     loadData();
                 }
             },
@@ -189,12 +197,11 @@ public class MainActivity extends ListActivity {
     }
 
     private void loadData() {
-        DateFormat formatter = new SimpleDateFormat("yyyMMddHHmm", Locale.ENGLISH);
-
-        String fromDate = formatter.format(start.getTime());
+        final Date thresholdDate = start.getTime();
+        String fromDate = dateFormat.format(start.getTime());
         // Retrieve all the listings from t to t+3*pageCount hours
         start.add(Calendar.HOUR_OF_DAY, 3);
-        String toDate = formatter.format(start.getTime());
+        String toDate = dateFormat.format(start.getTime());
 
         String url = new Uri.Builder()
                 .scheme("http")
@@ -225,6 +232,11 @@ public class MainActivity extends ListActivity {
 
                         for (int j = 0; j < programmes.length(); ++j) {
                             JSONObject programmeObj = programmes.getJSONObject(j);
+
+                            if (programmeObj.getString(TAG_PROGRAMME_START)
+                                    .compareTo(dateFormat.format(thresholdDate)) < 0) {
+                                continue;
+                            }
                             String title =
                                     Html.fromHtml(programmeObj
                                             .getString(TAG_PROGRAMME_TITLE)).toString();
@@ -252,6 +264,7 @@ public class MainActivity extends ListActivity {
 
                 if (pDialog.isShowing())
                     pDialog.dismiss();
+                loading = false;
             }
         }, new Response.ErrorListener() {
             @Override
@@ -259,6 +272,7 @@ public class MainActivity extends ListActivity {
                 // TODO Auto-generated method stub
                 if (pDialog.isShowing())
                     pDialog.dismiss();
+                loading = false;
             }
         });
 
