@@ -3,19 +3,14 @@ package com.bhaijaan.bajrangi.moviesnow;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AbsListView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.SimpleCursorAdapter;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -30,17 +25,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URLEncoder;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 
 
@@ -69,20 +59,17 @@ public class MainActivity extends ListActivity {
     public static final String TAG_PROGRAMME_STOP = "stop";
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
-    final private DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
-    final private DateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
+    private final Calendar start = Calendar.getInstance();
+    private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
 
     private static MySingleton mInstance;
-
-    private final Calendar start = Calendar.getInstance();
 
     private ProgressDialog pDialog;
     private ArrayList<Programme> programmeList;
     private ProgrammesAdapter adapter;
-    private boolean loading = false;
     private String channelList;
     private RequestQueue requestQueue;
-    private int pageCount = 1;
+    private boolean loading = false;
 
 
     public static class MySingleton {
@@ -232,7 +219,9 @@ public class MainActivity extends ListActivity {
 
                         for (int j = 0; j < programmes.length(); ++j) {
                             JSONObject programmeObj = programmes.getJSONObject(j);
-
+                            // Check if the start date for the programme is after the threshold
+                            // for current load request, as the API returns programs which are currently
+                            // running and not just those that started after `start`
                             if (programmeObj.getString(TAG_PROGRAMME_START)
                                     .compareTo(dateFormat.format(thresholdDate)) < 0) {
                                 continue;
