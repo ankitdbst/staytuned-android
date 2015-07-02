@@ -70,8 +70,9 @@ public class MainActivity extends ListActivity {
     public static final String TAG_PROGRAMME_STOP = "stop";
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
-    final private DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
-    final private DateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
+    // # of items left when API should prefetch data
+    private final int PREFETCH_LIMIT = 5;
+    private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
 
     private static MySingleton mInstance;
 
@@ -160,7 +161,7 @@ public class MainActivity extends ListActivity {
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem,
                                  int visibleItemCount, int totalItemCount) {
-                if (firstVisibleItem + visibleItemCount == totalItemCount && totalItemCount != 0) {
+                if (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount && totalItemCount != 0) {
                     if (!loading) {
                         loading = true;
                         loadData();
