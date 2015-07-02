@@ -3,14 +3,19 @@ package com.bhaijaan.bajrangi.moviesnow;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AbsListView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.SimpleCursorAdapter;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -25,12 +30,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URLEncoder;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 
 
@@ -52,6 +62,7 @@ public class MainActivity extends ListActivity {
     public static final String TAG_CHANNEL = "channel";
     public static final String TAG_CHANNEL_NAME = "channeldisplayname";
     public static final String TAG_PROGRAMME = "programme";
+    public static final String TAG_PROGRAMME_ID = "programmeid";
     public static final String TAG_PROGRAMME_TITLE = "title";
     public static final String TAG_PROGRAMME_IMAGE_URL = "programmeurl";
     public static final String TAG_PROGRAMME_GENRE = "subgenre";
@@ -59,18 +70,32 @@ public class MainActivity extends ListActivity {
     public static final String TAG_PROGRAMME_STOP = "stop";
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
-    private final Calendar start = Calendar.getInstance();
-    private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
+    final private DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
+    final private DateFormat dateTimeFormat = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
 
     private static MySingleton mInstance;
 
+    /* Calendar instance */
+    private final Calendar calendar = Calendar.getInstance();
+    /* Current date indicates the datetime till which data has been fetched */
+    private Date currDate = null;
     private ProgressDialog pDialog;
+    /* Store programme items */
     private ArrayList<Programme> programmeList;
+    /* Store programmes currently running to invalidate duplicates during
+    * successive fetches from the API */
+    private HashMap<String, Boolean> programmeMap = new LinkedHashMap<>();
+    /* Programme Model */
     private ProgrammesAdapter adapter;
-    private String channelList;
-    private RequestQueue requestQueue;
+    /* Indicate data being fetched */
     private boolean loading = false;
+    /* List of channels to retrieve programme listings from */
+    private String channelList;
+    /* Track the count of pages retrieved from the API */
+    private int pageCount = 0;
 
+    /* Request Queue for Network requests using Volley */
+    private RequestQueue requestQueue;
 
     public static class MySingleton {
         private RequestQueue mRequestQueue;
@@ -163,32 +188,31 @@ public class MainActivity extends ListActivity {
                 .toString();
 
         StringRequest channelListRequest = new StringRequest(Request.Method.GET, url,
-            new Response.Listener<String>() {
-                @Override
-                public void onResponse(String response) {
-                    channelList = response;
-                    loading = true;
-                    loadData();
-                }
-            },
-            new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    // Handle error
-                    if (pDialog.isShowing())
-                        pDialog.dismiss();
-                }
-            });
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        channelList = response;
+                        loading = true;
+                        loadData();
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // Handle error
+                        if (pDialog.isShowing())
+                            pDialog.dismiss();
+                    }
+                });
 
         requestQueue.add(channelListRequest);
     }
 
     private void loadData() {
-        final Date thresholdDate = start.getTime();
-        String fromDate = dateFormat.format(start.getTime());
+        String fromDate = dateFormat.format(calendar.getTime());
         // Retrieve all the listings from t to t+3*pageCount hours
-        start.add(Calendar.HOUR_OF_DAY, 3);
-        String toDate = dateFormat.format(start.getTime());
+        calendar.add(Calendar.HOUR_OF_DAY, 3);
+        String toDate = dateFormat.format(calendar.getTime());
 
         String url = new Uri.Builder()
                 .scheme("http")
@@ -202,68 +226,79 @@ public class MainActivity extends ListActivity {
                 .toString();
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
-        (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
 
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    JSONArray channels = response.getJSONObject(TAG_SCHEDULE).
-                            getJSONArray(TAG_CHANNEL);
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray channels = response.getJSONObject(TAG_SCHEDULE).
+                                    getJSONArray(TAG_CHANNEL);
 
-                    ArrayList<Programme> list = 
-                            new ArrayList<Programme>();
+                            ArrayList<Programme> list =
+                                    new ArrayList<Programme>();
 
-                    for (int i = 0; i < channels.length(); ++i) {
-                        JSONObject channelObj = channels.getJSONObject(i);
-                        JSONArray programmes = channelObj.getJSONArray(TAG_PROGRAMME);
+                            for (int i = 0; i < channels.length(); ++i) {
+                                JSONObject channelObj = channels.getJSONObject(i);
+                                JSONArray programmes = channelObj.getJSONArray(TAG_PROGRAMME);
 
-                        for (int j = 0; j < programmes.length(); ++j) {
-                            JSONObject programmeObj = programmes.getJSONObject(j);
-                            // Check if the start date for the programme is after the threshold
-                            // for current load request, as the API returns programs which are currently
-                            // running and not just those that started after `start`
-                            if (programmeObj.getString(TAG_PROGRAMME_START)
-                                    .compareTo(dateFormat.format(thresholdDate)) < 0) {
-                                continue;
+                                for (int j = 0; j < programmes.length(); ++j) {
+                                    JSONObject programmeObj = programmes.getJSONObject(j);
+                                    String programmeId = programmeObj.getString(TAG_PROGRAMME_ID);
+                                    if (programmeMap.containsKey(programmeId)) {
+                                        continue;
+                                    }
+                                    // Add currently added item to map, to filter these in the next
+                                    // iteration, if running.
+                                    programmeMap.put(programmeId, true);
+
+                                    String title =
+                                            Html.fromHtml(programmeObj
+                                                    .getString(TAG_PROGRAMME_TITLE)).toString();
+                                    title = Html.fromHtml(title).toString();
+
+                                    Programme p = new Programme();
+                                    p.setId(programmeId);
+                                    p.setTitle(title);
+                                    p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
+                                    p.setStop(programmeObj.getString(TAG_PROGRAMME_STOP));
+                                    p.setDuration(programmeObj.getInt(TAG_PROGRAMME_DURATION));
+                                    p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
+                                    p.setThumbnailUrl(programmeObj.
+                                            getString(TAG_PROGRAMME_IMAGE_URL));
+                                    p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
+                                    list.add(p);
+                                }
                             }
-                            String title =
-                                    Html.fromHtml(programmeObj
-                                            .getString(TAG_PROGRAMME_TITLE)).toString();
-                            title = Html.fromHtml(title).toString();
 
-                            Programme p = new Programme();
-                            p.setTitle(title);
-                            p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
-                            p.setStop(programmeObj.getString(TAG_PROGRAMME_STOP));
-                            p.setDuration(programmeObj.getInt(TAG_PROGRAMME_DURATION));
-                            p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
-                            p.setThumbnailUrl(programmeObj.
-                                    getString(TAG_PROGRAMME_IMAGE_URL));
-                            p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
-                            list.add(p);
+                            pageCount++;
+                            // We can remove the currently running programmes keys from the map
+                            // because no movie can last > 6 hours No?
+                            // i.e after 2 iterations
+                            if (pageCount > 0 && pageCount%2 == 0) {
+                                programmeMap.clear();
+                                for (Programme p: list) {
+                                    programmeMap.put(p.getId(), true);
+                                }
+                            }
+
+                            Collections.sort(list, Programme.getCompByStartTime());
+                            programmeList.addAll(list);
+                            adapter.notifyDataSetChanged();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
+                        if (pDialog.isShowing())
+                            pDialog.dismiss();
+                        loading = false;
                     }
-
-                    Collections.sort(list, Programme.getCompByStartTime());
-                    programmeList.addAll(list);
-                    adapter.notifyDataSetChanged();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                if (pDialog.isShowing())
-                    pDialog.dismiss();
-                loading = false;
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // TODO Auto-generated method stub
-                if (pDialog.isShowing())
-                    pDialog.dismiss();
-                loading = false;
-            }
-        });
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        if (pDialog.isShowing())
+                            pDialog.dismiss();
+                        loading = false;
+                    }
+                });
 
         requestQueue.add(jsObjRequest);
     }

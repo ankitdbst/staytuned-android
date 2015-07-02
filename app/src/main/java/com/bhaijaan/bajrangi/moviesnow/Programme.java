@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Locale;
 
 public class Programme {
+    private String id;
     private String title;
     private Date start = null;
     private Date stop = null;
@@ -62,8 +63,16 @@ public class Programme {
         return channelName;
     }
 
+    String getId() {
+        return id;
+    }
+
     void setTitle(String title) {
         this.title = title;
+    }
+
+    void setId(String id) {
+        this.id = id;
     }
 
     void setStart(String date) {
