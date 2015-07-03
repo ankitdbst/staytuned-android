@@ -57,7 +57,7 @@ public class ProgrammesAdapter extends BaseAdapter {
         NetworkImageView mNetworkImageView = (NetworkImageView) convertView.findViewById(R.id.thumbnail);
 
         // Get the ImageLoader through your singleton class.
-        ImageLoader mImageLoader = MainActivity.MySingleton.getInstance(context).getImageLoader();
+        ImageLoader mImageLoader = MainActivity.CurlSingleton.getInstance(context).getImageLoader();
 
         // Set the URL of the image that should be loaded into this view, and
         // specify the ImageLoader that will be used to make the request.

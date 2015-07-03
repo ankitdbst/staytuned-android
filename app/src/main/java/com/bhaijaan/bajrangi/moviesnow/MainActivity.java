@@ -46,7 +46,7 @@ import java.util.Locale;
 
 public class MainActivity extends ListActivity {
 
-    public static final String DATASOURCE_URL = "timesofindia.indiatimes.com";
+    public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
     public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
     public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
 
@@ -74,7 +74,7 @@ public class MainActivity extends ListActivity {
     private final int PREFETCH_LIMIT = 5;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
 
-    private static MySingleton mInstance;
+    private static CurlSingleton mInstance;
 
     /* Calendar instance */
     private final Calendar calendar = Calendar.getInstance();
@@ -95,15 +95,12 @@ public class MainActivity extends ListActivity {
     /* Track the count of pages retrieved from the API */
     private int pageCount = 0;
 
-    /* Request Queue for Network requests using Volley */
-    private RequestQueue requestQueue;
-
-    public static class MySingleton {
+    public static class CurlSingleton {
         private RequestQueue mRequestQueue;
         private ImageLoader mImageLoader;
         private static Context mCtx;
 
-        private MySingleton(Context context) {
+        private CurlSingleton(Context context) {
             mCtx = context;
             mRequestQueue = getRequestQueue();
 
@@ -111,9 +108,9 @@ public class MainActivity extends ListActivity {
                     LruBitmapCache.getCacheSize(context)));
         }
 
-        public static synchronized MySingleton getInstance(Context context) {
+        public static synchronized CurlSingleton getInstance(Context context) {
             if (mInstance == null) {
-                mInstance = new MySingleton(context);
+                mInstance = new CurlSingleton(context);
             }
             return mInstance;
         }
@@ -161,7 +158,8 @@ public class MainActivity extends ListActivity {
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem,
                                  int visibleItemCount, int totalItemCount) {
-                if (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount && totalItemCount != 0) {
+                if (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount &&
+                        totalItemCount != 0) {
                     if (!loading) {
                         loading = true;
                         loadData();
@@ -173,14 +171,10 @@ public class MainActivity extends ListActivity {
         // Bind to our new adapter.
         setListAdapter(adapter);
 
-        // Get a RequestQueue
-        requestQueue = MySingleton.getInstance(this.getApplicationContext()).
-                getRequestQueue();
-
         // Formulate the request and handle the response.
         String url = new Uri.Builder()
                 .scheme("http")
-                .authority(DATASOURCE_URL)
+                .authority(DATA_SOURCE_URL)
                 .path(CHANNEL_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
                 .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, "movies")
@@ -206,7 +200,7 @@ public class MainActivity extends ListActivity {
                     }
                 });
 
-        requestQueue.add(channelListRequest);
+        mInstance.addToRequestQueue(channelListRequest);
     }
 
     private void loadData() {
@@ -217,7 +211,7 @@ public class MainActivity extends ListActivity {
 
         String url = new Uri.Builder()
                 .scheme("http")
-                .authority(DATASOURCE_URL)
+                .authority(DATA_SOURCE_URL)
                 .path(SCHEDULE_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
                 .appendQueryParameter(CHANNEL_LIST, channelList)
@@ -267,6 +261,7 @@ public class MainActivity extends ListActivity {
                                     p.setThumbnailUrl(programmeObj.
                                             getString(TAG_PROGRAMME_IMAGE_URL));
                                     p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
+                                    p.getImdb().findByIdOrTitle(mInstance, null, title);
                                     list.add(p);
                                 }
                             }
@@ -301,7 +296,7 @@ public class MainActivity extends ListActivity {
                     }
                 });
 
-        requestQueue.add(jsObjRequest);
+        mInstance.addToRequestQueue(jsObjRequest);
     }
 
     @Override
