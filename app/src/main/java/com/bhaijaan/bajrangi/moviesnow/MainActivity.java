@@ -78,8 +78,7 @@ public class MainActivity extends ListActivity {
 
     /* Calendar instance */
     private final Calendar calendar = Calendar.getInstance();
-    /* Current date indicates the datetime till which data has been fetched */
-    private Date currDate = null;
+
     private ProgressDialog pDialog;
     /* Store programme items */
     private ArrayList<Programme> programmeList;
@@ -144,6 +143,8 @@ public class MainActivity extends ListActivity {
         pDialog.show();
 
         setContentView(R.layout.activity_main);
+
+        mInstance = CurlSingleton.getInstance(getApplicationContext());
 
         // Create a Programmes Adapter to retrieve the list of programmes
         programmeList = new ArrayList<>();
@@ -261,7 +262,6 @@ public class MainActivity extends ListActivity {
                                     p.setThumbnailUrl(programmeObj.
                                             getString(TAG_PROGRAMME_IMAGE_URL));
                                     p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
-                                    p.getImdb().findByIdOrTitle(mInstance, null, title);
                                     list.add(p);
                                 }
                             }

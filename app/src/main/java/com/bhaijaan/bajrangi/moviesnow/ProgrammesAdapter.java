@@ -53,11 +53,13 @@ public class ProgrammesAdapter extends BaseAdapter {
         TextView genre = (TextView) convertView.findViewById(R.id.genre);
         TextView channelName = (TextView) convertView.findViewById(R.id.channelname);
         TextView startTime = (TextView) convertView.findViewById(R.id.starttime);
+        TextView rating = (TextView) convertView.findViewById(R.id.rating);
 
         NetworkImageView mNetworkImageView = (NetworkImageView) convertView.findViewById(R.id.thumbnail);
 
+        MainActivity.CurlSingleton curlSingleton = MainActivity.CurlSingleton.getInstance(context);
         // Get the ImageLoader through your singleton class.
-        ImageLoader mImageLoader = MainActivity.CurlSingleton.getInstance(context).getImageLoader();
+        ImageLoader mImageLoader = curlSingleton.getImageLoader();
 
         // Set the URL of the image that should be loaded into this view, and
         // specify the ImageLoader that will be used to make the request.
@@ -68,6 +70,9 @@ public class ProgrammesAdapter extends BaseAdapter {
         genre.setText(programme.getGenre());
         channelName.setText(programme.getChannelName());
         startTime.setText(programme.getStart().toLocaleString());
+
+        // Queue IMDb query for fetching movie information
+        IMDb.queue(programme.getTitle(), rating, curlSingleton);
 
         // Return the completed view to render on screen
         return convertView;

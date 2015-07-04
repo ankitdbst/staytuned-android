@@ -43,13 +43,22 @@
         android:textColor="@color/genre"
         android:textSize="@dimen/genre" />
 
+    <!-- IMDB Rating -->
+    <TextView
+        android:id="@+id/rating"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/channelname"
+        android:textColor="@color/year"
+        android:textSize="@dimen/starttime" />
+
     <TextView
         android:id="@+id/starttime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/rating"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:textColor="@color/year"
         android:textSize="@dimen/starttime" />
-
 </RelativeLayout>
