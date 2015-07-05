@@ -10,14 +10,23 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.StringTokenizer;
 
 public class IMDb {
     private static final String DATA_SOURCE_URL = "omdbapi.com";
 
     private MainActivity.CurlSingleton curlSingleton;
     private int retryCount = 0;
+
+    // Words, Symbols to be filtered from the search text before query to IMDb
+    private final String filterWords[] = { "and", "of", "the", "an", "a" };
+    private final String filterSymbols[] = { "&", ":", ";" };
 
     // Request constants
     private static final String QUERY_TITLE = "t";
@@ -35,6 +44,8 @@ public class IMDb {
     private static final String YEAR = "Year";
     private static final String PLOT = "Plot";
     private static final String ID = "imdbID";
+    private static final String TYPE = "Type";
+    private static final String SEARCH = "Search";
 
 
     private static IMDb mInstance;
@@ -60,8 +71,7 @@ public class IMDb {
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
                 .appendQueryParameter(QUERY_PLOT, "short")
-                .appendQueryParameter(QUERY_RETURN, "json")
-                .appendQueryParameter(QUERY_TYPE, "movie");
+                .appendQueryParameter(QUERY_RETURN, "json");
 
         if (q_id != null && !q_id.isEmpty()) {
             builder.appendQueryParameter(QUERY_ID, q_id);
@@ -84,10 +94,10 @@ public class IMDb {
                                 // to imdb followed by findByIdOrTitle request
                                 if (retryCount > 0) {
                                     retryCount = 0;
+                                    programme.setImDbNA(false);
                                     return;
                                 }
-                                // Remove `&`, `and` from q_title string
-                                search(q_title);
+                                search(q_title, programme, adapter, convertView);
                                 retryCount++;
                                 return;
                             }
@@ -119,12 +129,76 @@ public class IMDb {
         curlSingleton.addToRequestQueue(jsonObjectRequest);
     }
 
-    public void search(String q_title) {
+    private String filter(String title) {
+        StringTokenizer tokenizer = new StringTokenizer(title);
+        StringBuilder stringBuilder = new StringBuilder();
+
+        while (tokenizer.hasMoreTokens()) {
+            boolean flag = true;
+            String token = tokenizer.nextToken();
+            for (String word: filterWords) {
+                if (token.equalsIgnoreCase(word)) {
+                    flag = false;
+                }
+            }
+
+            for (String symbol: filterSymbols) {
+                if (token.equalsIgnoreCase(symbol)) {
+                    flag = false;
+                }
+            }
+
+            if (flag) {
+                stringBuilder.append(token);
+                if (tokenizer.hasMoreTokens()) {
+                    stringBuilder.append(" ");
+                }
+            }
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private String computeClosestMatch(String str, JSONArray results) throws JSONException {
+        int strLen = str.length();
+        int minEditDistance = 100, minEditDistanceIndex = -1;
+
+        for (int i = 0; i < results.length(); ++i) {
+            String result = results.getJSONObject(i).getString(TITLE);
+            int len = result.length();
+
+            int dp[][] = new int[strLen+1][len+1];
+
+            for (int j = 0; j < strLen+1; ++j)
+                dp[j][0] = j;
+
+            for (int j = 0; j < len+1; ++j)
+                dp[0][j] = j;
+
+            for (int j = 1; j < strLen+1; ++j) {
+                for (int k = 1; k < len+1; ++k) {
+                    dp[j][k] = Math.min(Math.min(dp[j-1][k]+1, dp[j][k-1]+1),
+                                dp[j-1][k-1] + (str.charAt(j-1) == result.charAt(k-1) ? 1 : 0));
+                }
+            }
+
+            if (dp[strLen][len] < minEditDistance) {
+                minEditDistance = dp[strLen][len];
+                minEditDistanceIndex = i;
+            }
+        }
+
+        return results.getJSONObject(minEditDistanceIndex).getString(ID);
+    }
+
+    public void search(final String title, final Programme programme,
+                       final ProgrammesAdapter adapter, final View convertView) {
+        String q_title = filter(title);
+
         Uri.Builder builder = new Uri.Builder()
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
-                .appendQueryParameter(QUERY_RETURN, "json")
-                .appendQueryParameter(QUERY_TYPE, "movie");
+                .appendQueryParameter(QUERY_RETURN, "json");
 
         builder.appendQueryParameter(QUERY_SEARCH, q_title);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
@@ -132,13 +206,29 @@ public class IMDb {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject jsonObject) {
+                        try {
+                            String response = jsonObject.getString(RESPONSE);
+                            if (response.equals("False")) {
+                                programme.setImDbNA(false);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
 
+                        try {
+                            JSONArray results = jsonObject.getJSONArray(SEARCH);
+                            String imdbId = computeClosestMatch(title, results);
+                            findByIdOrTitle(imdbId, programme, adapter, convertView);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError volleyError) {
                         // do something about the error
+                        volleyError.printStackTrace();
                     }
                 }
         );

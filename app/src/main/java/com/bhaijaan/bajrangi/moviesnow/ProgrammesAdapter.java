@@ -74,12 +74,16 @@ public class ProgrammesAdapter extends BaseAdapter {
         channelName.setText(programme.getChannelName());
         startTime.setText(programme.getStart().toLocaleString());
 
+        // reset imdb info as there maybe some delay in fetching the current views rating
+        TextView rating = (TextView) convertView.findViewById(R.id.rating);
+        rating.setText("");
+
         // Queue IMDb query for fetching movie information
         IMDbDetail imDbDetail = programme.getImDbDetail();
-        if (imDbDetail != null) {
-            showIMDbInfo(imDbDetail, convertView);
-        } else {
+        if (programme.isImDbNA()) {
             IMDb.queue(this, convertView, programme, curlSingleton);
+        } else {
+            showIMDbInfo(imDbDetail, convertView);
         }
 
         // Return the completed view to render on screen
@@ -87,7 +91,7 @@ public class ProgrammesAdapter extends BaseAdapter {
     }
 
     public void showIMDbInfo(IMDbDetail iMdbDetail, View convertView) {
-        if (convertView.getVisibility() == View.VISIBLE) {
+        if (iMdbDetail != null && convertView.getVisibility() == View.VISIBLE) {
             TextView rating = (TextView) convertView.findViewById(R.id.rating);
             rating.setText(iMdbDetail.getRating());
         }

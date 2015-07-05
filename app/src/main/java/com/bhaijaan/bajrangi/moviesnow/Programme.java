@@ -21,6 +21,7 @@ public class Programme {
     private String channelName;
 
     private IMDbDetail imDbDetail;
+    private boolean imDbNA = true;
 
     public static Comparator<Programme> getCompByStartTime() {
         return new Comparator<Programme>(){
@@ -99,11 +100,20 @@ public class Programme {
     }
 
     public void setImDbDetail(IMDbDetail imDbDetail) {
+        setImDbNA(false);
         this.imDbDetail = imDbDetail;
     }
 
     public IMDbDetail getImDbDetail() {
         return imDbDetail;
+    }
+
+    void setImDbNA(boolean status) {
+        imDbNA = status;
+    }
+
+    public boolean isImDbNA() {
+        return imDbNA;
     }
 
     void setDuration(int duration) {
