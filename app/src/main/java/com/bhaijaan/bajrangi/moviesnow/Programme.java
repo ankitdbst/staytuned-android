@@ -20,6 +20,8 @@ public class Programme {
     private String genre;
     private String channelName;
 
+    private IMDbDetail imDbDetail;
+
     public static Comparator<Programme> getCompByStartTime() {
         return new Comparator<Programme>(){
             @Override
@@ -94,6 +96,14 @@ public class Programme {
         catch (ParseException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setImDbDetail(IMDbDetail imDbDetail) {
+        this.imDbDetail = imDbDetail;
+    }
+
+    public IMDbDetail getImDbDetail() {
+        return imDbDetail;
     }
 
     void setDuration(int duration) {

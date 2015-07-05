@@ -17,6 +17,7 @@ public class IMDb {
     private static final String DATA_SOURCE_URL = "omdbapi.com";
 
     private MainActivity.CurlSingleton curlSingleton;
+    private int retryCount = 0;
 
     // Request constants
     private static final String QUERY_TITLE = "t";
@@ -35,29 +36,26 @@ public class IMDb {
     private static final String PLOT = "Plot";
     private static final String ID = "imdbID";
 
-    private String id;
-    private String title;
-    private String rating;
-    private String year;
-    private String plot;
-    private int retryCount;
 
     private static IMDb mInstance;
 
-    public static void queue(String title, TextView textView,
-                        MainActivity.CurlSingleton curlSingleton) {
+    public static void queue(ProgrammesAdapter adapter, View convertView,
+                             Programme programme, MainActivity.CurlSingleton curlSingleton) {
         if (mInstance == null) {
             mInstance = new IMDb(curlSingleton);
         }
 
-        mInstance.findByIdOrTitle(null, title, textView);
+        mInstance.findByIdOrTitle(null, programme, adapter, convertView);
     }
 
     public IMDb(MainActivity.CurlSingleton curlSingleton) {
         this.curlSingleton = curlSingleton;
     }
 
-    public void findByIdOrTitle(String q_id, final String q_title, final TextView ratingView) {
+    public void findByIdOrTitle(String q_id, final Programme programme,
+                                final ProgrammesAdapter adapter, final View convertView) {
+        final String q_title = programme.getTitle();
+
         Uri.Builder builder = new Uri.Builder()
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
@@ -93,16 +91,17 @@ public class IMDb {
                                 retryCount++;
                                 return;
                             }
-                            title = jsonObject.getString(TITLE);
-                            id = jsonObject.getString(ID);
-                            year = jsonObject.getString(YEAR);
-                            rating = jsonObject.getString(RATING);
-                            plot = jsonObject.getString(PLOT);
 
-                            // Set view text
-                            if (ratingView.getVisibility() == View.VISIBLE) {
-                                ratingView.setText(rating);
-                            }
+                            IMDbDetail imDbDetail = new IMDbDetail();
+
+                            imDbDetail.setId(jsonObject.getString(ID));
+                            imDbDetail.setPlot(jsonObject.getString(PLOT));
+                            imDbDetail.setTitle(jsonObject.getString(TITLE));
+                            imDbDetail.setYear(jsonObject.getString(YEAR));
+                            imDbDetail.setRating(jsonObject.getString(RATING));
+
+                            programme.setImDbDetail(imDbDetail);
+                            adapter.showIMDbInfo(imDbDetail, convertView);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -145,10 +144,5 @@ public class IMDb {
         );
 
         curlSingleton.addToRequestQueue(jsonObjectRequest);
-    }
-
-    // Getters
-    public String getRating() {
-        return rating;
     }
 }

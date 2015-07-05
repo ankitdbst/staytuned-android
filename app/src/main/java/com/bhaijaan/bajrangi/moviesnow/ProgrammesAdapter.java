@@ -11,6 +11,10 @@ import android.widget.TextView;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
+import junit.framework.TestCase;
+
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -53,7 +57,6 @@ public class ProgrammesAdapter extends BaseAdapter {
         TextView genre = (TextView) convertView.findViewById(R.id.genre);
         TextView channelName = (TextView) convertView.findViewById(R.id.channelname);
         TextView startTime = (TextView) convertView.findViewById(R.id.starttime);
-        TextView rating = (TextView) convertView.findViewById(R.id.rating);
 
         NetworkImageView mNetworkImageView = (NetworkImageView) convertView.findViewById(R.id.thumbnail);
 
@@ -72,9 +75,21 @@ public class ProgrammesAdapter extends BaseAdapter {
         startTime.setText(programme.getStart().toLocaleString());
 
         // Queue IMDb query for fetching movie information
-        IMDb.queue(programme.getTitle(), rating, curlSingleton);
+        IMDbDetail imDbDetail = programme.getImDbDetail();
+        if (imDbDetail != null) {
+            showIMDbInfo(imDbDetail, convertView);
+        } else {
+            IMDb.queue(this, convertView, programme, curlSingleton);
+        }
 
         // Return the completed view to render on screen
         return convertView;
+    }
+
+    public void showIMDbInfo(IMDbDetail iMdbDetail, View convertView) {
+        if (convertView.getVisibility() == View.VISIBLE) {
+            TextView rating = (TextView) convertView.findViewById(R.id.rating);
+            rating.setText(iMdbDetail.getRating());
+        }
     }
 }
