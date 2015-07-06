@@ -3,6 +3,7 @@ package com.bhaijaan.bajrangi.moviesnow;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.v7.app.ActionBarActivity;
@@ -49,6 +50,8 @@ public class MainActivity extends ListActivity {
     public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
     public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
     public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
+
+    public static final String PREFS_CHANNEL_LIST = "ChannelListFile";
 
     // Configuration param names
     public static final String USER_ID = "userid";
@@ -172,6 +175,16 @@ public class MainActivity extends ListActivity {
         // Bind to our new adapter.
         setListAdapter(adapter);
 
+        // Avoid network call, if we have the channel list already fetched from the previous time.
+        final SharedPreferences channelListPref = getSharedPreferences(PREFS_CHANNEL_LIST, 0);
+        if (channelListPref.contains(CHANNEL_LIST)) {
+            channelList = channelListPref.getString(CHANNEL_LIST, "");
+            if (channelList != null && !channelList.isEmpty()) {
+                loadData();
+                return;
+            }
+        }
+
         // Formulate the request and handle the response.
         String url = new Uri.Builder()
                 .scheme("http")
@@ -188,6 +201,12 @@ public class MainActivity extends ListActivity {
                     @Override
                     public void onResponse(String response) {
                         channelList = response;
+
+                        SharedPreferences.Editor editor = channelListPref.edit();
+                        editor.putString(CHANNEL_LIST, channelList);
+                        // commit changes async
+                        editor.apply();
+
                         loading = true;
                         loadData();
                     }
