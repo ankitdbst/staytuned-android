@@ -46,11 +46,14 @@
     <!-- IMDB Rating -->
     <TextView
         android:id="@+id/rating"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:background="@drawable/imdb"
+        android:layout_centerVertical="true"
         android:layout_alignRight="@+id/channelname"
-        android:textColor="@color/year"
-        android:textSize="@dimen/starttime" />
+        android:gravity="center"
+        android:textSize="@dimen/starttime"
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/starttime"

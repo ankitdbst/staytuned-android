@@ -76,7 +76,7 @@ public class ProgrammesAdapter extends BaseAdapter {
 
         // reset imdb info as there maybe some delay in fetching the current views rating
         TextView rating = (TextView) convertView.findViewById(R.id.rating);
-        rating.setText("");
+        rating.setText("N/A");
 
         // Queue IMDb query for fetching movie information
         IMDbDetail imDbDetail = programme.getImDbDetail();
