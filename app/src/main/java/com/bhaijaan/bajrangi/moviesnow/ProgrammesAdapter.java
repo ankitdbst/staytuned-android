@@ -1,6 +1,8 @@
 package com.bhaijaan.bajrangi.moviesnow;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,13 +47,17 @@ public class ProgrammesAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // Get the data item for this position
+        //Log.v("receiver","position: "+position);
         Programme programme = (Programme) getItem(position);
         // Check if an existing view is being reused, otherwise inflate the view
         if (convertView == null) {
             convertView = LayoutInflater.from(context)
                     .inflate(R.layout.list_item, parent, false);
         }
-
+        if(programme.getSubscribed())
+            convertView.setBackgroundColor(Color.GREEN);
+        else
+            convertView.setBackgroundColor(Color.WHITE);
         // Lookup view for data population
         TextView title = (TextView) convertView.findViewById(R.id.title);
         TextView genre = (TextView) convertView.findViewById(R.id.genre);
@@ -63,7 +69,10 @@ public class ProgrammesAdapter extends BaseAdapter {
         MainActivity.CurlSingleton curlSingleton = MainActivity.CurlSingleton.getInstance(context);
         // Get the ImageLoader through your singleton class.
         ImageLoader mImageLoader = curlSingleton.getImageLoader();
-
+        //TODO Refresh on swipe down
+        //TODO ActionBar
+        //TODO Fling
+        //TODO 
         // Set the URL of the image that should be loaded into this view, and
         // specify the ImageLoader that will be used to make the request.
         mNetworkImageView.setImageUrl(programme.getThumbnailUrl(), mImageLoader);

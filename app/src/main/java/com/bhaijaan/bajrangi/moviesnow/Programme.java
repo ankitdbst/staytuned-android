@@ -19,6 +19,7 @@ public class Programme {
     private String thumbnailUrl;
     private String genre;
     private String channelName;
+    private Boolean subscribed = false;
 
     private IMDbDetail imDbDetail;
     private boolean imDbNA = true;
@@ -37,6 +38,15 @@ public class Programme {
                 return 1;
             }
         };
+    }
+
+    public void setSubscribed(Boolean subscribed) {
+        this.subscribed = subscribed;
+    }
+
+    public Boolean getSubscribed() {
+
+        return subscribed;
     }
 
     String getTitle() {

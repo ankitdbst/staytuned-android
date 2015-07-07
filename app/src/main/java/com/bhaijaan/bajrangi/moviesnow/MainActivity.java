@@ -1,22 +1,32 @@
 package com.bhaijaan.bajrangi.moviesnow;
 
+import android.app.AlarmManager;
 import android.app.ListActivity;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -61,6 +71,7 @@ public class MainActivity extends ListActivity {
     public static final String CHANNEL_LIST_FROM_DATE = "fromdatetime";
     public static final String CHANNEL_LIST_TO_DATE = "todatetime";
 
+    public static final String TAG = "MoviesNowActivityMain";
     public static final String TAG_SCHEDULE = "ScheduleGrid";
     public static final String TAG_CHANNEL = "channel";
     public static final String TAG_CHANNEL_NAME = "channeldisplayname";
@@ -73,7 +84,12 @@ public class MainActivity extends ListActivity {
     public static final String TAG_PROGRAMME_STOP = "stop";
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
+    //Notification Intent data sent
+    public static final String NOTIFICATION_INTENT_TITLE = "com.bajrangi.moviesnow.TITLE";
+    public static final String NOTIFICATION_INTENT_ID = "com.bajrangi.moviesnow.ID";
+    public static final String NOTIFICATION_PREF = "notificationSubscription";
     // # of items left when API should prefetch data
+    int NOTIFICATION_ID = 1;
     private final int PREFETCH_LIMIT = 5;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
 
@@ -152,6 +168,7 @@ public class MainActivity extends ListActivity {
         // Create a Programmes Adapter to retrieve the list of programmes
         programmeList = new ArrayList<>();
         adapter = new ProgrammesAdapter(MainActivity.this, programmeList);
+        final SharedPreferences notificationSubscribed = getSharedPreferences(NOTIFICATION_PREF,0);
 
         ListView listView = getListView();
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {
@@ -169,6 +186,37 @@ public class MainActivity extends ListActivity {
                         loadData();
                     }
                 }
+            }
+        });
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Programme subscribeToggle = programmeList.get(position);
+                Long itemIdLong = Long.parseLong(subscribeToggle.getId());
+                TextView title = (TextView) view.findViewById(R.id.title);
+                Log.v(TAG, "position :" + position + ", id: " + id + ",title  " + title.getText());
+                SharedPreferences.Editor editor = notificationSubscribed.edit();
+                if(notificationSubscribed.contains(subscribeToggle.getId()))
+                {
+                    //remove subscription from prefs data. Toggle operation
+                    editor.remove(subscribeToggle.getId());
+                    editor.apply();
+                    //remove alarm also TO DO
+                    //view.setBackgroundColor(Color.WHITE);
+                    cancelNotification(view,itemIdLong,position);
+                }
+                else {
+                    //add to subscription pref data.
+                    editor.putLong(subscribeToggle.getId(),subscribeToggle.getStop().getTime());
+                    editor.apply();
+                    Log.v(TAG,"Color:Green");
+                    //view.setBackgroundColor(Color.GREEN);
+                    scheduleNotification(view, itemIdLong);
+                }
+                subscribeToggle.setSubscribed(!subscribeToggle.getSubscribed());
+                adapter.notifyDataSetChanged();
+                //sendNotification(view);
             }
         });
 
@@ -223,6 +271,64 @@ public class MainActivity extends ListActivity {
         mInstance.addToRequestQueue(channelListRequest);
     }
 
+    public void sendNotification(View view) {
+        //create intent that will be fired when notification is clicked
+
+        Log.v(TAG, "inNotification");
+        Intent intent = new Intent(getApplicationContext(),com.bhaijaan.bajrangi.moviesnow.MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        //using notification compat builder to set up notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        // Set the intent that will fire when the user taps the notification.
+        //builder.setContentIntent(pendingIntent);
+
+        builder.setAutoCancel(true);
+
+        //Set the large icon, which appears on the left of the notification.
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher));
+        builder.setVisibility(1);
+
+        builder.setContentIntent(pendingIntent);
+
+        builder.setContentTitle("BasicNotifications Sample");
+        builder.setContentText("Time to learn about notifications!");
+        builder.setSubText("Tap to view documentation about notifications.");
+
+        //Send the notification. This will immediately display the notification icon in the
+        //         notification bar.
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_ID++, builder.build());
+    }
+
+    private void scheduleNotification(View view, long id) {
+        Log.v(TAG,"Schedule Notification");
+        TextView title = (TextView) view.findViewById(R.id.title);
+        Intent notificationIntent = new Intent(this,NotificationTriggerReceiver.class);
+        Log.v(TAG, "title :" + title.getText().toString() + " ,id :" + id);
+        notificationIntent.putExtra(NOTIFICATION_INTENT_TITLE,title.getText().toString());
+        notificationIntent.putExtra(NOTIFICATION_INTENT_ID,id);
+        //int currTime = (int) System.currentTimeMillis();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.RTC, System.currentTimeMillis()+10*1000, pendingIntent);
+
+    }
+
+    private void cancelNotification(View view, long id, int position) {
+
+        Log.v(TAG,"cancelling subscribed notification");
+        Intent notificationIntent = new Intent(this,NotificationTriggerReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(pendingIntent);
+        Log.v(TAG, "cancelled");
+    }
+
+
     private void loadData() {
         String fromDate = dateFormat.format(calendar.getTime());
         // Retrieve all the listings from t to t+3*pageCount hours
@@ -272,6 +378,7 @@ public class MainActivity extends ListActivity {
                                     title = Html.fromHtml(title).toString();
 
                                     Programme p = new Programme();
+                                    Log.v(TAG,"id: "+programmeId+" title: "+title);
                                     p.setId(programmeId);
                                     p.setTitle(title);
                                     p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
