@@ -72,7 +72,7 @@ public class ProgrammesAdapter extends BaseAdapter {
         //TODO Refresh on swipe down
         //TODO ActionBar
         //TODO Fling
-        //TODO 
+        //TODO Bootup
         // Set the URL of the image that should be loaded into this view, and
         // specify the ImageLoader that will be used to make the request.
         mNetworkImageView.setImageUrl(programme.getThumbnailUrl(), mImageLoader);

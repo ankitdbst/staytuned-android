@@ -1,35 +1,25 @@
 package com.bhaijaan.bajrangi.moviesnow;
 
+
 import android.app.AlarmManager;
-import android.app.ListActivity;
-import android.app.ListFragment;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.net.Uri;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.view.GestureDetectorCompat;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+
+import android.support.v4.app.ListFragment;
+import android.support.v4.view.GestureDetectorCompat;
 import android.text.Html;
 import android.util.Log;
-import android.view.GestureDetector;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -45,21 +35,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.URLEncoder;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
+/**
+ * Created by nitbhati on 7/9/15.
+ */
+public class EnglishMoviesFragment extends ListFragment {
 
-public class MainActivity extends ListActivity implements GestureDetector.OnGestureListener{
 
     public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
     public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
@@ -101,6 +91,7 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
 
     private static CurlSingleton mInstance;
 
+
     /* Calendar instance */
     private final Calendar calendar = Calendar.getInstance();
 
@@ -118,40 +109,6 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
     private String channelList;
     /* Track the count of pages retrieved from the API */
     private int pageCount = 0;
-
-    @Override
-    public boolean onDown(MotionEvent e) {
-        Log.v(GESTUR_DEBUG_TAG,"onDown: "+e.toString());
-        return true;
-    }
-
-    @Override
-    public void onShowPress(MotionEvent e) {
-        Log.v(GESTUR_DEBUG_TAG,"onShowPress: "+e.toString());
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-        Log.v(GESTUR_DEBUG_TAG,"onSingleTapUp: "+e.toString());
-        return true;
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        Log.v(GESTUR_DEBUG_TAG,"onScroll: "+e1.toString()+e2.toString()+"distanceX: "+distanceX+" distanceY: "+distanceY);
-        return true;
-    }
-
-    @Override
-    public void onLongPress(MotionEvent e) {
-        Log.v(GESTUR_DEBUG_TAG,"onLongPress: "+e.toString());
-    }
-
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        Log.v(GESTUR_DEBUG_TAG, "onFling: " + e1.toString() + e2.toString() + "velocityX: " + velocityX + " velocityY: " + velocityY);
-        return true;
-    }
 
     public static class CurlSingleton {
         private RequestQueue mRequestQueue;
@@ -191,35 +148,61 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
         }
     }
 
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // Showing progress dialog
-        pDialog = new ProgressDialog(MainActivity.this);
+        pDialog = new ProgressDialog(getActivity());
         pDialog.setMessage("Please wait...");
         pDialog.setCancelable(false);
         pDialog.show();
 
-        setContentView(R.layout.activity_main);
 
-        mInstance = CurlSingleton.getInstance(getApplicationContext());
+        mInstance = CurlSingleton.getInstance(getActivity().getApplicationContext());
 
         // Create a Programmes Adapter to retrieve the list of programmes
         programmeList = new ArrayList<>();
-        adapter = new ProgrammesAdapter(MainActivity.this, programmeList);
-        final SharedPreferences notificationSubscribed = getSharedPreferences(NOTIFICATION_PREF, 0);
+        adapter = new ProgrammesAdapter(getActivity(), programmeList);
 
-        mDetector = new GestureDetectorCompat(this,this);
+
+        //mDetector = new GestureDetectorCompat(this,this);
+
+
+/*
+
+        ArrayList<Map<String,String>>data = new ArrayList<>();
+        for(int i=0;i<10;i++)
+        {
+            Map<String,String>m = new HashMap<>();
+            m.put("ListKey","ListValue");
+            data.add(m);
+        }
+        String to[] = {"ListKey"};
+        int toint[] = {R.id.section_label};
+        SimpleAdapter adaptor = new SimpleAdapter(getActivity(),data,R.layout.fragment_main_activity3_navigation,to,toint);
+        setListAdapter(adaptor);
+        pDialog.dismiss();
+*/
+
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        final SharedPreferences notificationSubscribed = getActivity().getSharedPreferences(NOTIFICATION_PREF, 0);
         ListView listView = getListView();
-        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+        listView.setOnScrollListener(new AbsListView.OnScrollListener(){
+
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
+
             }
 
             @Override
-            public void onScroll(AbsListView view, int firstVisibleItem,
-                                 int visibleItemCount, int totalItemCount) {
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
                 if (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount &&
                         totalItemCount != 0) {
                     if (!loading) {
@@ -255,25 +238,15 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
                 }
                 subscribeToggle.setSubscribed(!subscribeToggle.getSubscribed());
                 adapter.notifyDataSetChanged();
-                //sendNotification(view);
             }
         });
-        /*
-        listView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.v(GESTUR_DEBUG_TAG,"listView onTouch: "+event.toString());
-                mDetector.onTouchEvent(event);
-                return true;
-            }
-        });
-    */
+
         // Bind to our new adapter.
         setListAdapter(adapter);
 
         // Avoid network call, if we have the channel list already fetched from the previous time.
-        final SharedPreferences channelListPref = getSharedPreferences(PREFS_CHANNEL_LIST, 0);
-        if (channelListPref.contains(CHANNEL_LIST)) {
+        final SharedPreferences channelListPref = getActivity().getSharedPreferences(PREFS_CHANNEL_LIST, 0);
+        if (!channelListPref.contains(CHANNEL_LIST)) {
             channelList = channelListPref.getString(CHANNEL_LIST, "");
             if (channelList != null && !channelList.isEmpty()) {
                 loadData();
@@ -288,7 +261,7 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
                 .path(CHANNEL_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
                 .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, "movies")
-                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, "english")
+                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, "hindi")
                 .build()
                 .toString();
 
@@ -317,58 +290,22 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
                 });
 
         mInstance.addToRequestQueue(channelListRequest);
+
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        Log.v(GESTUR_DEBUG_TAG,"MotionEvent: "+event.toString());
-        this.mDetector.onTouchEvent(event);
-        return super.onTouchEvent(event);
-    }
-
-    public void sendNotification(View view) {
-        //create intent that will be fired when notification is clicked
-
-        Log.v(TAG, "inNotification");
-        Intent intent = new Intent(getApplicationContext(),com.bhaijaan.bajrangi.moviesnow.MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-
-        //using notification compat builder to set up notification
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-
-        // Set the intent that will fire when the user taps the notification.
-        //builder.setContentIntent(pendingIntent);
-
-        builder.setAutoCancel(true);
-
-        //Set the large icon, which appears on the left of the notification.
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher));
-        builder.setVisibility(1);
-
-        builder.setContentIntent(pendingIntent);
-
-        builder.setContentTitle("BasicNotifications Sample");
-        builder.setContentText("Time to learn about notifications!");
-        builder.setSubText("Tap to view documentation about notifications.");
-
-        //Send the notification. This will immediately display the notification icon in the
-        //         notification bar.
-
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFICATION_ID++, builder.build());
+    public EnglishMoviesFragment() {
     }
 
     private void scheduleNotification(View view, long id) {
         Log.v(TAG,"Schedule Notification");
         TextView title = (TextView) view.findViewById(R.id.title);
-        Intent notificationIntent = new Intent(this,NotificationTriggerReceiver.class);
+        Intent notificationIntent = new Intent(getActivity(),NotificationTriggerReceiver.class);
         Log.v(TAG, "title :" + title.getText().toString() + " ,id :" + id);
         notificationIntent.putExtra(NOTIFICATION_INTENT_TITLE,title.getText().toString());
         notificationIntent.putExtra(NOTIFICATION_INTENT_ID,id);
         //int currTime = (int) System.currentTimeMillis();
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.RTC, System.currentTimeMillis()+10*1000, pendingIntent);
 
     }
@@ -376,9 +313,9 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
     private void cancelNotification(View view, long id, int position) {
 
         Log.v(TAG,"cancelling subscribed notification");
-        Intent notificationIntent = new Intent(this,NotificationTriggerReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent notificationIntent = new Intent(getActivity(),NotificationTriggerReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
         alarmManager.cancel(pendingIntent);
         Log.v(TAG, "cancelled");
     }
@@ -480,30 +417,14 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
         mInstance.addToRequestQueue(jsObjRequest);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
 }
