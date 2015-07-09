@@ -90,6 +90,7 @@ public class EnglishMoviesFragment extends ListFragment {
     private GestureDetectorCompat mDetector;
 
     private static CurlSingleton mInstance;
+    private String movieLanguageQuery;
 
 
     /* Calendar instance */
@@ -193,6 +194,9 @@ public class EnglishMoviesFragment extends ListFragment {
         super.onActivityCreated(savedInstanceState);
 
         final SharedPreferences notificationSubscribed = getActivity().getSharedPreferences(NOTIFICATION_PREF, 0);
+        Bundle args = getArguments();
+        movieLanguageQuery = args.getString(getString(R.string.movies_language));
+
         ListView listView = getListView();
         listView.setOnScrollListener(new AbsListView.OnScrollListener(){
 
@@ -261,7 +265,7 @@ public class EnglishMoviesFragment extends ListFragment {
                 .path(CHANNEL_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
                 .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, "movies")
-                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, "hindi")
+                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, movieLanguageQuery)
                 .build()
                 .toString();
 

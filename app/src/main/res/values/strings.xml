@@ -15,4 +15,7 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_example">Example action</string>
+    <string name="english_movies">English Movies</string>
+    <string name="hindi_movies">Hindi Movies</string>
+    <string name="movies_language">MOVIES_LANGUAGE</string>
 </resources>

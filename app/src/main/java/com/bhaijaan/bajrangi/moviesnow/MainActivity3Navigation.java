@@ -54,6 +54,16 @@ public class MainActivity3Navigation extends ActionBarActivity
         Fragment fragment = new EnglishMoviesFragment();
         Bundle args = new Bundle();
         args.putInt("POSITION", position);
+        //Hard coded as of now. Will have to come up with better design.
+
+        if(position == 0)
+        {
+            args.putString(getString(R.string.movies_language),"english");
+        }
+        else if(position == 1)
+        {
+            args.putString(getString(R.string.movies_language),"hindi");
+        }
         fragment.setArguments(args);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -68,10 +78,10 @@ public class MainActivity3Navigation extends ActionBarActivity
     public void onSectionAttached(int number) {
         switch (number) {
             case 1:
-                mTitle = getString(R.string.title_section1);
+                mTitle = getString(R.string.english_movies);
                 break;
             case 2:
-                mTitle = getString(R.string.title_section2);
+                mTitle = getString(R.string.hindi_movies);
                 break;
             case 3:
                 mTitle = getString(R.string.title_section3);
