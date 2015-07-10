@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/list_row_selector"
-    android:padding="8dp" >
+    android:padding="6dp"
+    android:animateLayoutChanges="true">
 
     <!-- Thumbnail Image -->
     <com.android.volley.toolbox.NetworkImageView
         android:id="@+id/thumbnail"
         android:layout_width="80dp"
         android:layout_height="80dp"
+        android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
-        android:layout_marginRight="8dp" />
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:animateLayoutChanges="true"/>
 
     <!-- Movie Title -->
     <TextView
@@ -19,49 +23,78 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/thumbnail"
+        android:layout_toEndOf="@+id/thumbnail"
         android:layout_toRightOf="@+id/thumbnail"
         android:textSize="@dimen/title"
         android:textStyle="bold" />
 
+    <!-- Movie Year -->
     <TextView
-        android:id="@+id/channelname"
-        android:layout_width="fill_parent"
+        android:id="@+id/year"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/title"
-        android:layout_marginTop="1dip"
+        android:layout_toEndOf="@+id/title"
+        android:layout_toRightOf="@+id/title"
+        android:textSize="@dimen/year" />
+
+    <!-- Channel Name -->
+    <TextView
+        android:id="@+id/channel_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/title"
+        android:layout_marginTop="2dip"
+        android:padding="3dp"
+        android:layout_toEndOf="@+id/thumbnail"
         android:layout_toRightOf="@+id/thumbnail"
-        android:textSize="@dimen/channelname" />
+        android:background="@color/channel_bg"
+        android:textColor="@color/channel_name"
+        android:textSize="@dimen/channel_name"/>
 
     <!-- Genre -->
     <TextView
         android:id="@+id/genre"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/channelname"
-        android:layout_marginTop="5dp"
-        android:layout_toRightOf="@+id/thumbnail"
-        android:textColor="@color/genre"
+        android:layout_alignTop="@+id/channel_name"
+        android:layout_marginTop="2dip"
+        android:layout_marginStart="4dip"
+        android:layout_marginLeft="4dip"
+        android:layout_toEndOf="@+id/channel_name"
+        android:layout_toRightOf="@+id/channel_name"
         android:textSize="@dimen/genre" />
+
+    <TextView
+        android:id="@+id/rated"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/channel_name"
+        android:layout_toEndOf="@+id/thumbnail"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:textSize="@dimen/rated"/>
 
     <!-- IMDB Rating -->
     <TextView
         android:id="@+id/rating"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
+        android:layout_width="38dp"
+        android:layout_height="34dp"
+        android:layout_below="@+id/channel_name"
+        android:layout_marginTop="3dip"
         android:background="@drawable/imdb"
-        android:layout_centerVertical="true"
-        android:layout_alignRight="@+id/channelname"
         android:gravity="center"
-        android:textSize="@dimen/starttime"
+        android:layout_toEndOf="@+id/thumbnail"
+        android:layout_toRightOf="@+id/thumbnail"
+        android:textSize="@dimen/rating"
         android:textStyle="bold"/>
 
+    <!-- Telecast time -->
     <TextView
-        android:id="@+id/starttime"
+        android:id="@+id/start_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/rating"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:textColor="@color/year"
-        android:textSize="@dimen/starttime" />
+        android:textColor="@color/start_time"
+        android:textSize="@dimen/start_time" />
 </RelativeLayout>

@@ -19,11 +19,13 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
@@ -38,6 +40,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -233,7 +236,31 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Programme subscribeToggle = programmeList.get(position);
+                Programme programme = programmeList.get(position);
+                Boolean programmeCollapsed = programme.getCollapsed();
+
+                NetworkImageView networkImageView = (NetworkImageView) findViewById(R.id.thumbnail);
+                ViewGroup.LayoutParams layoutParams = networkImageView.getLayoutParams();
+                if (programmeCollapsed) {
+                    layoutParams.height = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 140,
+                                    getResources().getDisplayMetrics());
+                    layoutParams.width = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 140,
+                                    getResources().getDisplayMetrics());
+                    programme.setCollapsed(false);
+                } else {
+                    layoutParams.height = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80,
+                                    getResources().getDisplayMetrics());
+                    layoutParams.width = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80,
+                                    getResources().getDisplayMetrics());
+                    programme.setCollapsed(true);
+                }
+                networkImageView.requestLayout();
+
+                /*
                 Long itemIdLong = Long.parseLong(subscribeToggle.getId());
                 TextView title = (TextView) view.findViewById(R.id.title);
                 Log.v(TAG, "position :" + position + ", id: " + id + ",title  " + title.getText());
@@ -256,6 +283,7 @@ public class MainActivity extends ListActivity implements GestureDetector.OnGest
                 subscribeToggle.setSubscribed(!subscribeToggle.getSubscribed());
                 adapter.notifyDataSetChanged();
                 //sendNotification(view);
+                */
             }
         });
         /*

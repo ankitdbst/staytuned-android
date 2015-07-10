@@ -20,6 +20,15 @@ public class Programme {
     private String genre;
     private String channelName;
     private Boolean subscribed = false;
+    private Boolean collapsed = true;
+
+    public Boolean getCollapsed() {
+        return collapsed;
+    }
+
+    public void setCollapsed(Boolean collapsed) {
+        this.collapsed = collapsed;
+    }
 
     private IMDbDetail imDbDetail;
     private boolean imDbNA = true;

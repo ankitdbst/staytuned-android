@@ -61,8 +61,8 @@ public class ProgrammesAdapter extends BaseAdapter {
         // Lookup view for data population
         TextView title = (TextView) convertView.findViewById(R.id.title);
         TextView genre = (TextView) convertView.findViewById(R.id.genre);
-        TextView channelName = (TextView) convertView.findViewById(R.id.channelname);
-        TextView startTime = (TextView) convertView.findViewById(R.id.starttime);
+        TextView channelName = (TextView) convertView.findViewById(R.id.channel_name);
+        TextView startTime = (TextView) convertView.findViewById(R.id.start_time);
 
         NetworkImageView mNetworkImageView = (NetworkImageView) convertView.findViewById(R.id.thumbnail);
 

@@ -14,8 +14,10 @@ import android.support.v4.app.ListFragment;
 import android.support.v4.view.GestureDetectorCompat;
 import android.text.Html;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -28,6 +30,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -220,6 +223,32 @@ public class EnglishMoviesFragment extends ListFragment {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Programme programme = programmeList.get(position);
+                Boolean programmeCollapsed = programme.getCollapsed();
+
+                NetworkImageView networkImageView = (NetworkImageView) view.findViewById(R.id.thumbnail);
+                ViewGroup.LayoutParams layoutParams = networkImageView.getLayoutParams();
+
+                if (programmeCollapsed) {
+                    layoutParams.height = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 140,
+                                    getResources().getDisplayMetrics());
+                    layoutParams.width = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 140,
+                                    getResources().getDisplayMetrics());
+                    programme.setCollapsed(false);
+                } else {
+                    layoutParams.height = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80,
+                                    getResources().getDisplayMetrics());
+                    layoutParams.width = (int) TypedValue
+                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80,
+                                    getResources().getDisplayMetrics());
+                    programme.setCollapsed(true);
+                }
+
+                view.requestLayout();
+                /*
                 Programme subscribeToggle = programmeList.get(position);
                 Long itemIdLong = Long.parseLong(subscribeToggle.getId());
                 TextView title = (TextView) view.findViewById(R.id.title);
@@ -242,6 +271,7 @@ public class EnglishMoviesFragment extends ListFragment {
                 }
                 subscribeToggle.setSubscribed(!subscribeToggle.getSubscribed());
                 adapter.notifyDataSetChanged();
+                */
             }
         });
 
