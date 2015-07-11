@@ -18,9 +18,12 @@ import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
@@ -192,6 +195,11 @@ public class EnglishMoviesFragment extends ListFragment {
 
     }
 
+    public void toggleReminder() {
+        //
+        Log.v(TAG, "test");
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -226,52 +234,29 @@ public class EnglishMoviesFragment extends ListFragment {
                 Programme programme = programmeList.get(position);
                 Boolean programmeCollapsed = programme.getCollapsed();
 
-                NetworkImageView networkImageView = (NetworkImageView) view.findViewById(R.id.thumbnail);
-                ViewGroup.LayoutParams layoutParams = networkImageView.getLayoutParams();
+                RelativeLayout imdbDetailView = (RelativeLayout) view.findViewById(R.id.imdb_detail);
 
+                //ResizeAnimation a = new ResizeAnimation(networkImageView);
+                //a.setDuration(500);
+
+                //int newHeight, newWidth;
                 if (programmeCollapsed) {
-                    layoutParams.height = (int) TypedValue
-                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 140,
-                                    getResources().getDisplayMetrics());
-                    layoutParams.width = (int) TypedValue
-                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 140,
-                                    getResources().getDisplayMetrics());
+                    imdbDetailView.setVisibility(View.VISIBLE);
+                    //newHeight = dpToPx(140);
+                    //newWidth = dpToPx(140);
                     programme.setCollapsed(false);
                 } else {
-                    layoutParams.height = (int) TypedValue
-                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80,
-                                    getResources().getDisplayMetrics());
-                    layoutParams.width = (int) TypedValue
-                            .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 80,
-                                    getResources().getDisplayMetrics());
+                    imdbDetailView.setVisibility(View.GONE);
+                    //newHeight = dpToPx(100);
+                    //newWidth = dpToPx(100);
                     programme.setCollapsed(true);
                 }
 
-                view.requestLayout();
-                /*
-                Programme subscribeToggle = programmeList.get(position);
-                Long itemIdLong = Long.parseLong(subscribeToggle.getId());
-                TextView title = (TextView) view.findViewById(R.id.title);
-                Log.v(TAG, "position :" + position + ", id: " + id + ",title  " + title.getText());
-                SharedPreferences.Editor editor = notificationSubscribed.edit();
-                if (notificationSubscribed.contains(subscribeToggle.getId())) {
-                    //remove subscription from prefs data. Toggle operation
-                    editor.remove(subscribeToggle.getId());
-                    editor.apply();
-                    //remove alarm also TO DO
-                    //view.setBackgroundColor(Color.WHITE);
-                    cancelNotification(view, itemIdLong, position);
-                } else {
-                    //add to subscription pref data.
-                    editor.putLong(subscribeToggle.getId(), subscribeToggle.getStop().getTime());
-                    editor.apply();
-                    Log.v(TAG, "Color:Green");
-                    //view.setBackgroundColor(Color.GREEN);
-                    scheduleNotification(view, itemIdLong);
-                }
-                subscribeToggle.setSubscribed(!subscribeToggle.getSubscribed());
-                adapter.notifyDataSetChanged();
-                */
+                // set the starting height (the current height) and the new height that the view should have after the animation
+                //a.setParams(networkImageView.getHeight(), newHeight,
+                //        networkImageView.getWidth(), newWidth);
+
+                //networkImageView.startAnimation(a);
             }
         });
 
@@ -327,33 +312,71 @@ public class EnglishMoviesFragment extends ListFragment {
 
     }
 
+    public int dpToPx(int value) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, value,
+                getResources().getDisplayMetrics());
+    }
+
+    public class ResizeAnimation extends Animation {
+
+        private int startHeight;
+        private int deltaHeight; // distance between start and end height
+
+        private int startWidth;
+        private int deltaWidth;
+        private View view;
+
+        /**
+         * constructor, do not forget to use the setParams(int, int) method before
+         * starting the animation
+         * @param v
+         */
+        public ResizeAnimation (View v) {
+            this.view = v;
+        }
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+
+            view.getLayoutParams().height = (int) (startHeight +
+                    deltaHeight * interpolatedTime);
+            view.getLayoutParams().width = (int) (startWidth +
+                    deltaWidth * interpolatedTime);
+            view.requestLayout();
+        }
+
+        /**
+         * set the starting and ending height for the resize animation
+         * starting height is usually the views current height, the end height is the height
+         * we want to reach after the animation is completed
+         * @param startHeight height in pixels
+         * @param endHeight height in pixels
+         */
+        public void setParams(int startHeight, int endHeight, int startWidth, int endWidth) {
+
+            this.startHeight = startHeight;
+            deltaHeight = endHeight - startHeight;
+
+            this.startWidth = startWidth;
+            deltaWidth = endWidth - startWidth;
+        }
+
+        /**
+         * set the duration for the hideshowanimation
+         */
+        @Override
+        public void setDuration(long durationMillis) {
+            super.setDuration(durationMillis);
+        }
+
+        @Override
+        public boolean willChangeBounds() {
+            return true;
+        }
+    }
+
     public EnglishMoviesFragment() {
     }
-
-    private void scheduleNotification(View view, long id) {
-        Log.v(TAG,"Schedule Notification");
-        TextView title = (TextView) view.findViewById(R.id.title);
-        Intent notificationIntent = new Intent(getActivity(),NotificationTriggerReceiver.class);
-        Log.v(TAG, "title :" + title.getText().toString() + " ,id :" + id);
-        notificationIntent.putExtra(NOTIFICATION_INTENT_TITLE,title.getText().toString());
-        notificationIntent.putExtra(NOTIFICATION_INTENT_ID,id);
-        //int currTime = (int) System.currentTimeMillis();
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-        alarmManager.set(AlarmManager.RTC, System.currentTimeMillis()+10*1000, pendingIntent);
-
-    }
-
-    private void cancelNotification(View view, long id, int position) {
-
-        Log.v(TAG,"cancelling subscribed notification");
-        Intent notificationIntent = new Intent(getActivity(),NotificationTriggerReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getActivity(), (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
-        AlarmManager alarmManager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-        alarmManager.cancel(pendingIntent);
-        Log.v(TAG, "cancelled");
-    }
-
 
     private void loadData() {
         String fromDate = dateFormat.format(calendar.getTime());

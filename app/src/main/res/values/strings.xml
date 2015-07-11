@@ -2,7 +2,6 @@
     <string name="app_name">BajrangiBhaijaanTVMovies</string>
     <string name="title_activity_main">MainActivity</string>
 
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_main_activity2_action_bar">MainActivity2ActionBar</string>
     <string name="title_activity_main_activity3_navigation">MainActivity3Navigation</string>
@@ -18,4 +17,9 @@
     <string name="english_movies">English Movies</string>
     <string name="hindi_movies">Hindi Movies</string>
     <string name="movies_language">MOVIES_LANGUAGE</string>
+
+    <string name="actors_label">Actors:</string>
+    <string name="directors_label">Directors:</string>
+    <string name="subscribe">Notify</string>
+    <string name="cancel">Cancel</string>
 </resources>

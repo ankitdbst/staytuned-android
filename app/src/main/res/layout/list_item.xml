@@ -6,95 +6,180 @@
     android:padding="6dp"
     android:animateLayoutChanges="true">
 
-    <!-- Thumbnail Image -->
-    <com.android.volley.toolbox.NetworkImageView
-        android:id="@+id/thumbnail"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:animateLayoutChanges="true"/>
-
-    <!-- Movie Title -->
-    <TextView
-        android:id="@+id/title"
+    <RelativeLayout
+        android:id="@+id/synopsis"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/thumbnail"
-        android:layout_toEndOf="@+id/thumbnail"
-        android:layout_toRightOf="@+id/thumbnail"
-        android:textSize="@dimen/title"
-        android:textStyle="bold" />
+        android:animateLayoutChanges="true">
+        <!-- Thumbnail Image -->
+        <com.android.volley.toolbox.NetworkImageView
+            android:id="@+id/thumbnail"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:animateLayoutChanges="true"/>
 
-    <!-- Movie Year -->
-    <TextView
-        android:id="@+id/year"
+        <!-- Movie Title -->
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/thumbnail"
+            android:layout_toEndOf="@+id/thumbnail"
+            android:layout_toRightOf="@+id/thumbnail"
+            android:textSize="@dimen/title"
+            android:textStyle="bold" />
+
+        <!-- Movie Year -->
+        <TextView
+            android:id="@+id/year"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@+id/title"
+            android:layout_toRightOf="@+id/title"
+            android:textSize="@dimen/year" />
+
+        <!-- Genre -->
+        <TextView
+            android:id="@+id/genre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/title"
+            android:layout_marginTop="2dip"
+            android:layout_toEndOf="@+id/thumbnail"
+            android:layout_toRightOf="@+id/thumbnail"
+            android:textSize="@dimen/genre" />
+
+        <!-- Duration -->
+        <TextView
+            android:id="@+id/duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/genre"
+            android:layout_marginStart="2dip"
+            android:layout_marginLeft="2dip"
+            android:layout_toEndOf="@+id/genre"
+            android:layout_toRightOf="@+id/genre"
+            android:paddingLeft="1dp"
+            android:paddingRight="1dp"
+            android:background="#00c7a0"
+            android:textColor="#ffffff"
+            android:textSize="@dimen/duration" />
+
+        <!-- IMDB Rating -->
+        <TextView
+            android:id="@+id/rating"
+            android:layout_width="38dp"
+            android:layout_height="34dp"
+            android:background="@drawable/imdb"
+            android:gravity="center"
+            android:layout_alignBottom="@+id/genre"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textSize="@dimen/rating"
+            android:textStyle="bold"/>
+
+        <!-- Channel Name -->
+        <TextView
+            android:id="@+id/channel_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/genre"
+            android:layout_marginTop="4dp"
+            android:padding="3dp"
+            android:drawableLeft="@drawable/ic_tv_white_18dp"
+            android:drawablePadding="3dp"
+            android:layout_toEndOf="@+id/thumbnail"
+            android:layout_toRightOf="@+id/thumbnail"
+            android:background="@color/channel_bg"
+            android:textColor="@color/channel_name"
+            android:textSize="@dimen/channel_name"/>
+
+        <Button
+            android:id="@+id/subscribe"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_below="@+id/genre"
+            android:background="#00c7a0"
+            android:layout_alignTop="@+id/channel_name"
+            android:layout_toEndOf="@+id/channel_name"
+            android:layout_toRightOf="@+id/channel_name"
+            android:drawablePadding="3dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:text="@string/subscribe"
+            android:textSize="14sp"
+            android:textColor="#ffffff"
+            android:padding="3dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:drawableLeft="@drawable/ic_alarm_add_white_18dp"/>
+
+        <!-- Telecast time -->
+        <TextView
+            android:id="@+id/start_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/subscribe"
+            android:layout_marginTop="1dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:textColor="@color/start_time"
+            android:textSize="@dimen/start_time" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/imdb_detail"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/title"
-        android:layout_toRightOf="@+id/title"
-        android:textSize="@dimen/year" />
+        android:layout_below="@+id/synopsis"
+        android:layout_marginTop="3dip">
+        <TextView
+            android:id="@+id/plot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="italic"/>
 
-    <!-- Channel Name -->
-    <TextView
-        android:id="@+id/channel_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/title"
-        android:layout_marginTop="2dip"
-        android:padding="3dp"
-        android:layout_toEndOf="@+id/thumbnail"
-        android:layout_toRightOf="@+id/thumbnail"
-        android:background="@color/channel_bg"
-        android:textColor="@color/channel_name"
-        android:textSize="@dimen/channel_name"/>
+        <TextView
+            android:id="@+id/actors_label"
+            android:layout_alignTop="@+id/actors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/actors_label"
+            android:layout_marginRight="1dp"
+            android:textStyle="bold"/>
 
-    <!-- Genre -->
-    <TextView
-        android:id="@+id/genre"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/channel_name"
-        android:layout_marginTop="2dip"
-        android:layout_marginStart="4dip"
-        android:layout_marginLeft="4dip"
-        android:layout_toEndOf="@+id/channel_name"
-        android:layout_toRightOf="@+id/channel_name"
-        android:textSize="@dimen/genre" />
+        <TextView
+            android:id="@+id/actors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/actors_label"
+            android:layout_toEndOf="@+id/actors_label"
+            android:layout_below="@+id/plot"
+            android:layout_marginTop="1dip"/>
 
-    <TextView
-        android:id="@+id/rated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/channel_name"
-        android:layout_toEndOf="@+id/thumbnail"
-        android:layout_toRightOf="@+id/thumbnail"
-        android:textSize="@dimen/rated"/>
+        <TextView
+            android:id="@+id/directors_label"
+            android:layout_alignTop="@+id/directors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/directors_label"
+            android:layout_marginRight="1dp"
+            android:textStyle="bold"/>
 
-    <!-- IMDB Rating -->
-    <TextView
-        android:id="@+id/rating"
-        android:layout_width="38dp"
-        android:layout_height="34dp"
-        android:layout_below="@+id/channel_name"
-        android:layout_marginTop="3dip"
-        android:background="@drawable/imdb"
-        android:gravity="center"
-        android:layout_toEndOf="@+id/thumbnail"
-        android:layout_toRightOf="@+id/thumbnail"
-        android:textSize="@dimen/rating"
-        android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/directors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/actors"
+            android:layout_toRightOf="@+id/directors_label"
+            android:layout_toEndOf="@+id/directors_label"
+            android:layout_marginTop="1dip"/>
 
-    <!-- Telecast time -->
-    <TextView
-        android:id="@+id/start_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:textColor="@color/start_time"
-        android:textSize="@dimen/start_time" />
+    </RelativeLayout>
 </RelativeLayout>

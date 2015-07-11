@@ -1,6 +1,7 @@
 package com.bhaijaan.bajrangi.moviesnow;
 
 import android.content.ContentUris;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.view.View;
 import android.widget.TextView;
@@ -45,6 +46,8 @@ public class IMDb {
     private static final String PLOT = "Plot";
     private static final String ID = "imdbID";
     private static final String TYPE = "Type";
+    private static final String ACTORS = "Actors";
+    private static final String DIRECTOR = "Director";
     private static final String SEARCH = "Search";
 
 
@@ -109,6 +112,8 @@ public class IMDb {
                             imDbDetail.setTitle(jsonObject.getString(TITLE));
                             imDbDetail.setYear(jsonObject.getString(YEAR));
                             imDbDetail.setRating(jsonObject.getString(RATING));
+                            imDbDetail.setActors(jsonObject.getString(ACTORS));
+                            imDbDetail.setDirectors(jsonObject.getString(DIRECTOR));
 
                             programme.setImDbDetail(imDbDetail);
                             adapter.showIMDbInfo(imDbDetail, convertView);
