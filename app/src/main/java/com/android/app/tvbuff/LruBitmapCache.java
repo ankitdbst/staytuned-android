@@ -1,4 +1,4 @@
-package com.bhaijaan.bajrangi.moviesnow;
+package com.android.app.tvbuff;
 
 import android.content.Context;
 import android.graphics.Bitmap;

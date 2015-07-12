@@ -1,4 +1,4 @@
-package com.bhaijaan.bajrangi.moviesnow;
+package com.android.app.tvbuff;
 
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;

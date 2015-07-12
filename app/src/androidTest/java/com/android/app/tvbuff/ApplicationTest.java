@@ -1,4 +1,4 @@
-package com.bhaijaan.bajrangi.moviesnow;
+package com.android.app.tvbuff;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

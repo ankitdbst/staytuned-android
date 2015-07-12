@@ -1,11 +1,8 @@
-package com.bhaijaan.bajrangi.moviesnow;
+package com.android.app.tvbuff;
 
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,15 +14,12 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.SimpleAdapter;
-import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -33,7 +27,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -49,12 +42,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * Created by nitbhati on 7/9/15.
  */
-public class EnglishMoviesFragment extends ListFragment {
+public class ProgrammesFragment extends ListFragment {
 
 
     public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
@@ -89,14 +81,13 @@ public class EnglishMoviesFragment extends ListFragment {
     public static final String NOTIFICATION_INTENT_TITLE = "com.bajrangi.moviesnow.TITLE";
     public static final String NOTIFICATION_INTENT_ID = "com.bajrangi.moviesnow.ID";
     public static final String NOTIFICATION_PREF = "notificationSubscription";
+
     // # of items left when API should prefetch data
-    int NOTIFICATION_ID = 1;
     private final int PREFETCH_LIMIT = 5;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
     private GestureDetectorCompat mDetector;
 
     private static CurlSingleton mInstance;
-    private String movieLanguageQuery;
 
 
     /* Calendar instance */
@@ -166,47 +157,19 @@ public class EnglishMoviesFragment extends ListFragment {
         pDialog.setCancelable(false);
         pDialog.show();
 
-
         mInstance = CurlSingleton.getInstance(getActivity().getApplicationContext());
 
         // Create a Programmes Adapter to retrieve the list of programmes
         programmeList = new ArrayList<>();
         adapter = new ProgrammesAdapter(getActivity(), programmeList);
-
-
-        //mDetector = new GestureDetectorCompat(this,this);
-
-
-/*
-
-        ArrayList<Map<String,String>>data = new ArrayList<>();
-        for(int i=0;i<10;i++)
-        {
-            Map<String,String>m = new HashMap<>();
-            m.put("ListKey","ListValue");
-            data.add(m);
-        }
-        String to[] = {"ListKey"};
-        int toint[] = {R.id.section_label};
-        SimpleAdapter adaptor = new SimpleAdapter(getActivity(),data,R.layout.fragment_main_activity3_navigation,to,toint);
-        setListAdapter(adaptor);
-        pDialog.dismiss();
-*/
-
-    }
-
-    public void toggleReminder() {
-        //
-        Log.v(TAG, "test");
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        final SharedPreferences notificationSubscribed = getActivity().getSharedPreferences(NOTIFICATION_PREF, 0);
         Bundle args = getArguments();
-        movieLanguageQuery = args.getString(getString(R.string.movies_language));
+        String movieLanguageQuery = args.getString(getString(R.string.movies_language));
 
         ListView listView = getListView();
         listView.setOnScrollListener(new AbsListView.OnScrollListener(){
@@ -227,6 +190,7 @@ public class EnglishMoviesFragment extends ListFragment {
                 }
             }
         });
+
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -236,27 +200,12 @@ public class EnglishMoviesFragment extends ListFragment {
 
                 RelativeLayout imdbDetailView = (RelativeLayout) view.findViewById(R.id.imdb_detail);
 
-                //ResizeAnimation a = new ResizeAnimation(networkImageView);
-                //a.setDuration(500);
-
-                //int newHeight, newWidth;
                 if (programmeCollapsed) {
                     imdbDetailView.setVisibility(View.VISIBLE);
-                    //newHeight = dpToPx(140);
-                    //newWidth = dpToPx(140);
-                    programme.setCollapsed(false);
                 } else {
                     imdbDetailView.setVisibility(View.GONE);
-                    //newHeight = dpToPx(100);
-                    //newWidth = dpToPx(100);
-                    programme.setCollapsed(true);
                 }
-
-                // set the starting height (the current height) and the new height that the view should have after the animation
-                //a.setParams(networkImageView.getHeight(), newHeight,
-                //        networkImageView.getWidth(), newWidth);
-
-                //networkImageView.startAnimation(a);
+                programme.setCollapsed(!programmeCollapsed);
             }
         });
 
@@ -309,7 +258,6 @@ public class EnglishMoviesFragment extends ListFragment {
                 });
 
         mInstance.addToRequestQueue(channelListRequest);
-
     }
 
     public int dpToPx(int value) {
@@ -375,7 +323,7 @@ public class EnglishMoviesFragment extends ListFragment {
         }
     }
 
-    public EnglishMoviesFragment() {
+    public ProgrammesFragment() {
     }
 
     private void loadData() {
@@ -411,6 +359,9 @@ public class EnglishMoviesFragment extends ListFragment {
                                 JSONObject channelObj = channels.getJSONObject(i);
                                 JSONArray programmes = channelObj.getJSONArray(TAG_PROGRAMME);
 
+                                String channelName = Html.fromHtml(channelObj
+                                        .getString(TAG_CHANNEL_NAME)).toString();
+
                                 for (int j = 0; j < programmes.length(); ++j) {
                                     JSONObject programmeObj = programmes.getJSONObject(j);
                                     String programmeId = programmeObj.getString(TAG_PROGRAMME_ID);
@@ -436,7 +387,7 @@ public class EnglishMoviesFragment extends ListFragment {
                                     p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
                                     p.setThumbnailUrl(programmeObj.
                                             getString(TAG_PROGRAMME_IMAGE_URL));
-                                    p.setChannelName(channelObj.getString(TAG_CHANNEL_NAME));
+                                    p.setChannelName(channelName);
                                     list.add(p);
                                 }
                             }

@@ -1,7 +1,4 @@
-package com.bhaijaan.bajrangi.moviesnow;
-
-import android.view.View;
-import android.widget.TextView;
+package com.android.app.tvbuff;
 
 import java.text.DateFormat;
 import java.text.ParseException;

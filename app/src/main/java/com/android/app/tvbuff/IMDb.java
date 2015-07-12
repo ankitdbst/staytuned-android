@@ -1,10 +1,8 @@
-package com.bhaijaan.bajrangi.moviesnow;
+package com.android.app.tvbuff;
 
-import android.content.ContentUris;
-import android.content.SharedPreferences;
 import android.net.Uri;
+import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -15,19 +13,19 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class IMDb {
     private static final String DATA_SOURCE_URL = "omdbapi.com";
 
-    private MainActivity.CurlSingleton curlSingleton;
+    private ProgrammesFragment.CurlSingleton curlSingleton;
     private int retryCount = 0;
 
     // Words, Symbols to be filtered from the search text before query to IMDb
     private final String filterWords[] = { "and", "of", "the", "an", "a" };
     private final String filterSymbols[] = { "&", ":", ";" };
+
+    private static final String TAG = "IMDb";
 
     // Request constants
     private static final String QUERY_TITLE = "t";
@@ -54,7 +52,7 @@ public class IMDb {
     private static IMDb mInstance;
 
     public static void queue(ProgrammesAdapter adapter, View convertView,
-                             Programme programme, MainActivity.CurlSingleton curlSingleton) {
+                             Programme programme, ProgrammesFragment.CurlSingleton curlSingleton) {
         if (mInstance == null) {
             mInstance = new IMDb(curlSingleton);
         }
@@ -62,7 +60,7 @@ public class IMDb {
         mInstance.findByIdOrTitle(null, programme, adapter, convertView);
     }
 
-    public IMDb(MainActivity.CurlSingleton curlSingleton) {
+    public IMDb(ProgrammesFragment.CurlSingleton curlSingleton) {
         this.curlSingleton = curlSingleton;
     }
 
@@ -81,7 +79,7 @@ public class IMDb {
         } else if (q_title != null && !q_title.isEmpty()) {
             builder.appendQueryParameter(QUERY_TITLE, q_title);
         } else {
-            // do nothing for now, but exception should be thrown
+            Log.e(TAG, "Required parameter q_title and q_id are both null/empty.");
             return;
         }
 
@@ -118,15 +116,14 @@ public class IMDb {
                             programme.setImDbDetail(imDbDetail);
                             adapter.showIMDbInfo(imDbDetail, convertView);
                         } catch (JSONException e) {
-                            e.printStackTrace();
+                            Log.d(TAG, "Error parsing response: " + e.getMessage());
                         }
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError volleyError) {
-                        // do something about the error
-                        volleyError.printStackTrace();
+                        Log.e(TAG, "Volley Error: " + volleyError.getMessage());
                     }
                 }
         );
@@ -198,7 +195,7 @@ public class IMDb {
 
     public void search(final String title, final Programme programme,
                        final ProgrammesAdapter adapter, final View convertView) {
-        String q_title = filter(title);
+        final String q_title = filter(title);
 
         Uri.Builder builder = new Uri.Builder()
                 .scheme("http")
@@ -217,7 +214,8 @@ public class IMDb {
                                 programme.setImDbNA(false);
                             }
                         } catch (JSONException e) {
-                            e.printStackTrace();
+                            Log.d(TAG, "No results found for search: "
+                                    + q_title + " " + e.getMessage());
                         }
 
                         try {
@@ -225,15 +223,15 @@ public class IMDb {
                             String imdbId = computeClosestMatch(title, results);
                             findByIdOrTitle(imdbId, programme, adapter, convertView);
                         } catch (JSONException e) {
-                            e.printStackTrace();
+                            Log.d(TAG, "Error parsing response for search: "
+                                    + q_title + " " + e.getMessage());
                         }
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError volleyError) {
-                        // do something about the error
-                        volleyError.printStackTrace();
+                        Log.e(TAG, "Volley Error: " + volleyError.getMessage());
                     }
                 }
         );

@@ -1,4 +1,4 @@
-package com.bhaijaan.bajrangi.moviesnow;
+package com.android.app.tvbuff;
 
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.view.View;
 
 /**
  * Created by nitbhati on 7/5/15.
@@ -26,7 +25,7 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         //create intent that will be fired when notification is clicked
 
         Log.v("receiver","FiringNotification");
-        Intent notificationIntent = new Intent(context,com.bhaijaan.bajrangi.moviesnow.MainActivity.class);
+        Intent notificationIntent = new Intent(context, ProgrammesFragment.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
 
         //using notification compat builder to set up notification

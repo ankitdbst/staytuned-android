@@ -1,4 +1,4 @@
-package com.bhaijaan.bajrangi.moviesnow;
+package com.android.app.tvbuff;
 
 
 public class IMDbDetail {

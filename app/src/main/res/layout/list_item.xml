@@ -30,17 +30,9 @@
             android:layout_alignTop="@+id/thumbnail"
             android:layout_toEndOf="@+id/thumbnail"
             android:layout_toRightOf="@+id/thumbnail"
-            android:textSize="@dimen/title"
-            android:textStyle="bold" />
-
-        <!-- Movie Year -->
-        <TextView
-            android:id="@+id/year"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toEndOf="@+id/title"
-            android:layout_toRightOf="@+id/title"
-            android:textSize="@dimen/year" />
+            android:layout_marginRight="40dp"
+            android:layout_marginEnd="40dp"
+            android:textSize="@dimen/title"/>
 
         <!-- Genre -->
         <TextView
