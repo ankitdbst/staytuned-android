@@ -20,6 +20,6 @@
 
     <string name="actors_label">Actors:</string>
     <string name="directors_label">Directors:</string>
-    <string name="subscribe">Notify</string>
+    <string name="subscribe">Notify Me</string>
     <string name="cancel">Cancel</string>
 </resources>

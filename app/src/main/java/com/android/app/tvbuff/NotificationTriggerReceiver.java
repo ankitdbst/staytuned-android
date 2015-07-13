@@ -27,6 +27,13 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         Log.v("receiver","FiringNotification");
         Intent notificationIntent = new Intent(context, ProgrammesFragment.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
+        //TODO refresh on swipe up
+        //TODO phone reboot notification
+        //TODO navigation drawer beautify
+        //TODO Settings: Channel filter and remind me before template
+        //TODO Notification drawer icon
+        //TODO Collapse issue/bug
+        //TODO Scroll to top
 
         //using notification compat builder to set up notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);

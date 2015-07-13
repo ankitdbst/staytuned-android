@@ -14,5 +14,5 @@
     <dimen name="genre">14sp</dimen>
     <dimen name="duration">14sp</dimen>
     <dimen name="start_time">13sp</dimen>
-    <dimen name="rating">12sp</dimen>
+    <dimen name="rating">15sp</dimen>
 </resources>

@@ -3,14 +3,12 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/list_row_selector"
-    android:padding="6dp"
-    android:animateLayoutChanges="true">
+    android:padding="6dp">
 
     <RelativeLayout
         android:id="@+id/synopsis"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:animateLayoutChanges="true">
+        android:layout_height="wrap_content">
         <!-- Thumbnail Image -->
         <com.android.volley.toolbox.NetworkImageView
             android:id="@+id/thumbnail"
@@ -30,8 +28,6 @@
             android:layout_alignTop="@+id/thumbnail"
             android:layout_toEndOf="@+id/thumbnail"
             android:layout_toRightOf="@+id/thumbnail"
-            android:layout_marginRight="40dp"
-            android:layout_marginEnd="40dp"
             android:textSize="@dimen/title"/>
 
         <!-- Genre -->
@@ -43,6 +39,7 @@
             android:layout_marginTop="2dip"
             android:layout_toEndOf="@+id/thumbnail"
             android:layout_toRightOf="@+id/thumbnail"
+            android:textColor="#000000"
             android:textSize="@dimen/genre" />
 
         <!-- Duration -->
@@ -50,77 +47,56 @@
             android:id="@+id/duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/genre"
-            android:layout_marginStart="2dip"
-            android:layout_marginLeft="2dip"
-            android:layout_toEndOf="@+id/genre"
-            android:layout_toRightOf="@+id/genre"
-            android:paddingLeft="1dp"
-            android:paddingRight="1dp"
-            android:background="#00c7a0"
-            android:textColor="#ffffff"
+            android:drawableLeft="@drawable/ic_access_time_black_18dp"
+            android:drawablePadding="3dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="2dp"
+            android:layout_toEndOf="@+id/thumbnail"
+            android:layout_toRightOf="@+id/thumbnail"
+            android:layout_below="@+id/genre"
+            android:textColor="#000000"
             android:textSize="@dimen/duration" />
 
         <!-- IMDB Rating -->
         <TextView
             android:id="@+id/rating"
-            android:layout_width="38dp"
-            android:layout_height="34dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:background="@drawable/imdb"
             android:gravity="center"
-            android:layout_alignBottom="@+id/genre"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:textSize="@dimen/rating"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:layout_centerVertical="true"
+            />
 
         <!-- Channel Name -->
         <TextView
             android:id="@+id/channel_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/genre"
-            android:layout_marginTop="4dp"
-            android:padding="3dp"
-            android:drawableLeft="@drawable/ic_tv_white_18dp"
+            android:layout_below="@+id/duration"
+            android:drawableLeft="@drawable/ic_tv_black_18dp"
             android:drawablePadding="3dp"
+            android:layout_marginTop="2dp"
             android:layout_toEndOf="@+id/thumbnail"
             android:layout_toRightOf="@+id/thumbnail"
-            android:background="@color/channel_bg"
-            android:textColor="@color/channel_name"
+            android:textColor="#000000"
             android:textSize="@dimen/channel_name"/>
-
-        <Button
-            android:id="@+id/subscribe"
-            android:layout_width="wrap_content"
-            android:layout_height="24dp"
-            android:layout_below="@+id/genre"
-            android:background="#00c7a0"
-            android:layout_alignTop="@+id/channel_name"
-            android:layout_toEndOf="@+id/channel_name"
-            android:layout_toRightOf="@+id/channel_name"
-            android:drawablePadding="3dp"
-            android:layout_marginStart="4dp"
-            android:layout_marginLeft="4dp"
-            android:text="@string/subscribe"
-            android:textSize="14sp"
-            android:textColor="#ffffff"
-            android:padding="3dp"
-            android:focusable="false"
-            android:focusableInTouchMode="false"
-            android:drawableLeft="@drawable/ic_alarm_add_white_18dp"/>
 
         <!-- Telecast time -->
         <TextView
             android:id="@+id/start_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/subscribe"
+            android:layout_below="@+id/channel_name"
             android:layout_marginTop="1dp"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:textColor="@color/start_time"
+            android:textStyle="bold"
             android:textSize="@dimen/start_time" />
 
     </RelativeLayout>
@@ -143,7 +119,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/actors_label"
-            android:layout_marginRight="1dp"
+            android:layout_marginRight="2dp"
             android:textStyle="bold"/>
 
         <TextView
@@ -161,7 +137,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/directors_label"
-            android:layout_marginRight="1dp"
+            android:layout_marginRight="2dp"
             android:textStyle="bold"/>
 
         <TextView
@@ -172,6 +148,25 @@
             android:layout_toRightOf="@+id/directors_label"
             android:layout_toEndOf="@+id/directors_label"
             android:layout_marginTop="1dip"/>
+
+        <Button
+            android:id="@+id/subscribe"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_below="@+id/directors"
+            android:background="#00c7a0"
+            android:drawablePadding="3dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="2dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:text="@string/subscribe"
+            android:textSize="14sp"
+            android:textColor="#ffffff"
+            android:padding="4dp"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:drawableLeft="@drawable/ic_alarm_add_white_18dp"/>
 
     </RelativeLayout>
 </RelativeLayout>
