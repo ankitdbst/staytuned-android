@@ -9,17 +9,22 @@ import android.os.Bundle;
 
 import android.support.v4.app.ListFragment;
 import android.support.v4.view.GestureDetectorCompat;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.Html;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -40,12 +45,16 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Vector;
 
 /**
  * Created by nitbhati on 7/9/15.
  */
+
 public class ProgrammesFragment extends ListFragment {
 
 
@@ -108,6 +117,8 @@ public class ProgrammesFragment extends ListFragment {
     /* Track the count of pages retrieved from the API */
     private int pageCount = 0;
 
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
     public static class CurlSingleton {
         private RequestQueue mRequestQueue;
         private ImageLoader mImageLoader;
@@ -165,6 +176,88 @@ public class ProgrammesFragment extends ListFragment {
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Create the list fragment's content view by calling the super method
+        final View listFragmentView = super.onCreateView(inflater, container, savedInstanceState);
+
+        // Now create a SwipeRefreshLayout to wrap the fragment's content view
+        mSwipeRefreshLayout = new ListFragmentSwipeRefreshLayout(container.getContext());
+        // Add the list fragment's content view to the SwipeRefreshLayout, making sure that it fills
+        // the SwipeRefreshLayout
+        mSwipeRefreshLayout.addView(listFragmentView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+        // Make sure that the SwipeRefreshLayout will fill the fragment
+        mSwipeRefreshLayout.setLayoutParams(
+                new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // Now return the SwipeRefreshLayout as this fragment's content view
+        return mSwipeRefreshLayout;
+    }
+
+    public void setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener listener) {
+        mSwipeRefreshLayout.setOnRefreshListener(listener);
+    }
+
+    public boolean isRefreshing() {
+        return mSwipeRefreshLayout.isRefreshing();
+    }
+
+    public void setRefreshing(boolean refreshing) {
+        mSwipeRefreshLayout.setRefreshing(refreshing);
+    }
+
+    public void setColorScheme(int colorRes1, int colorRes2, int colorRes3, int colorRes4) {
+        mSwipeRefreshLayout.setColorSchemeResources(colorRes1, colorRes2, colorRes3, colorRes4);
+    }
+
+    public SwipeRefreshLayout getSwipeRefreshLayout() {
+        return mSwipeRefreshLayout;
+    }
+
+    private class ListFragmentSwipeRefreshLayout extends SwipeRefreshLayout {
+
+        public ListFragmentSwipeRefreshLayout(Context context) {
+            super(context);
+        }
+
+        /**
+         * As mentioned above, we need to override this method to properly signal when a
+         * 'swipe-to-refresh' is possible.
+         *
+         * @return true if the {@link android.widget.ListView} is visible and can scroll up.
+         */
+        @Override
+        public boolean canChildScrollUp() {
+            final ListView listView = getListView();
+            if (listView.getVisibility() == View.VISIBLE) {
+                return canListViewScrollUp(listView);
+            } else {
+                return false;
+            }
+        }
+
+    }
+    /**
+     * Utility method to check whether a {@link ListView} can scroll up from it's current position.
+     * Handles platform version differences, providing backwards compatible functionality where
+     * needed.
+     */
+    private static boolean canListViewScrollUp(ListView listView) {
+        if (android.os.Build.VERSION.SDK_INT >= 14) {
+            // For ICS and above we can call canScrollVertically() to determine this
+            return ViewCompat.canScrollVertically(listView, -1);
+        } else {
+            // Pre-ICS we need to manually check the first visible item and the child view's top
+            // value
+            return listView.getChildCount() > 0 &&
+                    (listView.getFirstVisiblePosition() > 0
+                            || listView.getChildAt(0).getTop() < listView.getPaddingTop());
+        }
+    }
+
+    @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
@@ -206,6 +299,52 @@ public class ProgrammesFragment extends ListFragment {
                     imdbDetailView.setVisibility(View.GONE);
                 }
                 programme.setCollapsed(!programmeCollapsed);
+            }
+        });
+
+        setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
+
+            @Override
+            public void onRefresh() {
+                //called when swipe up detected
+                Toast.makeText(getActivity(), "Refresh event triggered", Toast.LENGTH_SHORT).show();
+                loadData();
+                //adapter.notifyDataSetChanged();
+                //traverse through programme list and remove which have been completed
+                int index =0,indicesindex=0;
+                List<Integer> oldProgrammes = new ArrayList<>();
+                //int indices[] = new int[1000];
+                Log.v(TAG,"removing programme "+programmeList.size());
+                //int
+                for(Programme p:programmeList)
+                {
+                    if(p.getStop().getTime()-System.currentTimeMillis()<0) {
+                        Log.v(TAG, "removing programme " + index);
+                        //remove this programme
+                        oldProgrammes.add(index);
+                        //programmeList.remove(programmeList.indexOf(p));
+                    }
+                    index++;
+                }
+                for(int i=0;i<oldProgrammes.size();i++)
+                {
+                    programmeList.remove(oldProgrammes.get(i).intValue());
+                }
+                Programme lastProgramme = programmeList.get(programmeList.size() - 1);
+                //setting calendar to the timestamp of last programmelist element
+                calendar.setTime(lastProgramme.getStart());
+
+                //Checking if only 1 hour data is left or only 10 items left in
+                if(lastProgramme.getStart().getTime()-System.currentTimeMillis()<1*60*60*1000 || programmeList.size()<10)
+                {
+                    //call loadData
+                    loadData();
+                }
+                else
+                {
+                    adapter.notifyDataSetChanged();
+                }
+                setRefreshing(false);
             }
         });
 

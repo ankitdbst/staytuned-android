@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -103,7 +104,7 @@ public class ProgrammesAdapter extends BaseAdapter {
                 int position = (Integer) v.getTag();
                 Programme programme = (Programme) getItem(position);
                 Long itemIdLong = Long.parseLong(programme.getId());
-
+                //TODO move it out of on click listener=
                 final SharedPreferences notificationSubscribed = context
                         .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0);
 
@@ -113,11 +114,12 @@ public class ProgrammesAdapter extends BaseAdapter {
                     editor.remove(programme.getId());
                     editor.apply();
 
-                    Toast.makeText(context, "Reminder cancelled", Toast.LENGTH_SHORT).show();
                     cancelNotification(view, itemIdLong, position);
+                    Toast.makeText(context, "Reminder cancelled", Toast.LENGTH_SHORT).show();
                 } else {
                     //add to subscription pref data.
                     editor.putLong(programme.getId(), programme.getStop().getTime());
+                    editor.putString(programme.getId()+"_title",programme.getTitle());
                     editor.apply();
 
                     Toast.makeText(context, "Reminder set", Toast.LENGTH_SHORT).show();
@@ -179,9 +181,11 @@ public class ProgrammesAdapter extends BaseAdapter {
     }
 
     private void scheduleNotification(View view, long id) {
-        //Log.v(TAG,"Schedule Notification");
+        Log.v("scheduleNotification",""+ id);
         TextView title = (TextView) view.findViewById(R.id.title);
         Intent notificationIntent = new Intent(context, NotificationTriggerReceiver.class);
+        //Intent notificationIntent2 = new Intent(context, PhoneBootReceiver.class);
+        //context.sendBroadcast(notificationIntent2);
         //Log.v(TAG, "title :" + title.getText().toString() + " ,id :" + id);
         notificationIntent.putExtra(ProgrammesFragment.NOTIFICATION_INTENT_TITLE,title.getText().toString());
         notificationIntent.putExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID,id);

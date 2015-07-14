@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -23,7 +24,6 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
 
     private void sendNotification(Context context,Intent intent) {
         //create intent that will be fired when notification is clicked
-
         Log.v("receiver","FiringNotification");
         Intent notificationIntent = new Intent(context, ProgrammesFragment.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
@@ -49,9 +49,9 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         builder.setVisibility(1);
 
         builder.setContentIntent(pendingIntent);
-        Log.v("receiver", intent.getStringExtra("com.bajrangi.moviesnow.TITLE"));
-        Log.v("receiver","notification id: "+(int) intent.getLongExtra("com.bajrangi.moviesnow.ID",0));
-        builder.setContentTitle(intent.getStringExtra("com.bajrangi.moviesnow.TITLE"));
+        Log.v("receiver", intent.getStringExtra(ProgrammesFragment.NOTIFICATION_INTENT_TITLE));
+        Log.v("receiver","notification id: "+(int) intent.getLongExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID,0));
+        builder.setContentTitle(intent.getStringExtra(ProgrammesFragment.NOTIFICATION_INTENT_TITLE));
         builder.setContentText("Time to learn about notifications!");
         builder.setSubText("Tap to view documentation about notifications.");
 
