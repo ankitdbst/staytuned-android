@@ -42,10 +42,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
-/**
- * Created by nitbhati on 7/9/15.
- */
+
 public class ProgrammesFragment extends ListFragment {
 
 
@@ -53,7 +52,24 @@ public class ProgrammesFragment extends ListFragment {
     public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
     public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
 
-    public static final String PREFS_CHANNEL_LIST = "ChannelListFile";
+    /** Shared Preference list file key for Channel Lists
+    Pref file for each category
+    Can store:
+        1. Channel list to query
+        2. Genre to filter
+        3. Imdb rating to fetch YES/NO etc.
+    */
+
+    // Feed new programme categories here
+    public static final String programmeCategories[] = {
+        "movies"
+    };
+
+    // Feed new programme languages here
+    public static final String programmeLanguages[] = {
+        "english",
+        "hindi"
+    };
 
     // Configuration param names
     public static final String USER_ID = "userid";
@@ -63,8 +79,9 @@ public class ProgrammesFragment extends ListFragment {
     public static final String CHANNEL_LIST_FROM_DATE = "fromdatetime";
     public static final String CHANNEL_LIST_TO_DATE = "todatetime";
 
-    public static final String TAG = "MoviesNowActivityMain";
-    public static final String GESTUR_DEBUG_TAG = "Gestures";
+    // Logging tag
+    public static final String TAG = "ProgrammeFragment";
+
     public static final String TAG_SCHEDULE = "ScheduleGrid";
     public static final String TAG_CHANNEL = "channel";
     public static final String TAG_CHANNEL_NAME = "channeldisplayname";
@@ -85,10 +102,8 @@ public class ProgrammesFragment extends ListFragment {
     // # of items left when API should prefetch data
     private final int PREFETCH_LIMIT = 5;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
-    private GestureDetectorCompat mDetector;
 
     private static CurlSingleton mInstance;
-
 
     /* Calendar instance */
     private final Calendar calendar = Calendar.getInstance();
@@ -169,7 +184,14 @@ public class ProgrammesFragment extends ListFragment {
         super.onActivityCreated(savedInstanceState);
 
         Bundle args = getArguments();
-        String movieLanguageQuery = args.getString(getString(R.string.movies_language));
+
+        String category = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
+        String language = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
+
+        String prefKey = getActivity().getPackageName() + "." + category + "_" + language;
+
+        // Avoid network call, if we have the channel list already fetched from the previous time.
+        final SharedPreferences channelListPref = getActivity().getSharedPreferences(prefKey, 0);
 
         ListView listView = getListView();
         listView.setOnScrollListener(new AbsListView.OnScrollListener(){
@@ -209,12 +231,11 @@ public class ProgrammesFragment extends ListFragment {
             }
         });
 
-        // Bind to our new adapter.
+        // Bind to programme adapter
         setListAdapter(adapter);
 
-        // Avoid network call, if we have the channel list already fetched from the previous time.
-        final SharedPreferences channelListPref = getActivity().getSharedPreferences(PREFS_CHANNEL_LIST, 0);
-        if (!channelListPref.contains(CHANNEL_LIST)) {
+        // Always load channel listing from the prefs, if present
+        if (channelListPref.contains(CHANNEL_LIST)) {
             channelList = channelListPref.getString(CHANNEL_LIST, "");
             if (channelList != null && !channelList.isEmpty()) {
                 loadData();
@@ -222,14 +243,13 @@ public class ProgrammesFragment extends ListFragment {
             }
         }
 
-        // Formulate the request and handle the response.
         String url = new Uri.Builder()
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
                 .path(CHANNEL_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
-                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, "movies")
-                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, movieLanguageQuery)
+                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, category)
+                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, language)
                 .build()
                 .toString();
 

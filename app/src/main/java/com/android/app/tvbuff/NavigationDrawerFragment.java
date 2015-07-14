@@ -22,12 +22,21 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
  * See the <a href="https://developer.android.com/design/patterns/navigation-drawer.html#Interaction">
  * design guidelines</a> for a complete explanation of the behaviors implemented here.
  */
 public class NavigationDrawerFragment extends Fragment {
+
+    public static final String ITEM_CATEGORY = "category";
+    public static final String ITEM_LANGUAGE = "language";
+    public static final String ITEM_TITLE = "title";
 
     /**
      * Remember the position of the selected item.
@@ -58,12 +67,30 @@ public class NavigationDrawerFragment extends Fragment {
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
 
+    public List<Map<String, String>> items;
+    public List<String> displayItems;
+
     public NavigationDrawerFragment() {
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Programme Categories to show
+        items = new ArrayList<>();
+        displayItems = new ArrayList<>();
+
+        for (String language : ProgrammesFragment.programmeLanguages) {
+            for (String category : ProgrammesFragment.programmeCategories) {
+                Map<String, String> m = new HashMap<>();
+                String key = language + "_" + category;
+                m.put(ITEM_CATEGORY, category);
+                m.put(ITEM_LANGUAGE, language);
+                displayItems.add(getStringResourceByName("title_" + key));
+                items.add(m);
+            }
+        }
 
         // Read in the flag indicating whether or not the user has demonstrated awareness of the
         // drawer. See PREF_USER_LEARNED_DRAWER for details.
@@ -86,6 +113,12 @@ public class NavigationDrawerFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
+    private String getStringResourceByName(String aString) {
+        String packageName = getActivity().getPackageName();
+        int resId = getResources().getIdentifier(aString, "string", packageName);
+        return getString(resId);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -97,14 +130,11 @@ public class NavigationDrawerFragment extends Fragment {
                 selectItem(position);
             }
         });
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
+
+        mDrawerListView.setAdapter(new ArrayAdapter<>(
                 getActionBar().getThemedContext(),
                 android.R.layout.simple_list_item_activated_1,
-                android.R.id.text1,
-                new String[]{
-                        getString(R.string.english_movies),
-                        getString(R.string.hindi_movies)
-                }));
+                displayItems));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }
@@ -196,7 +226,7 @@ public class NavigationDrawerFragment extends Fragment {
             mDrawerLayout.closeDrawer(mFragmentContainerView);
         }
         if (mCallbacks != null) {
-            mCallbacks.onNavigationDrawerItemSelected(position);
+            mCallbacks.onNavigationDrawerItemSelected(items.get(position));
         }
     }
 
@@ -276,6 +306,6 @@ public class NavigationDrawerFragment extends Fragment {
         /**
          * Called when an item in the navigation drawer is selected.
          */
-        void onNavigationDrawerItemSelected(int position);
+        void onNavigationDrawerItemSelected(Map<String, String> item);
     }
 }

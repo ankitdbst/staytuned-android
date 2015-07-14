@@ -1,5 +1,6 @@
 package com.android.app.tvbuff;
 
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -8,6 +9,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
+
+import java.util.Map;
 
 
 public class MainActivity extends ActionBarActivity
@@ -22,6 +25,8 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+    private String category;
+    private String language;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,44 +44,22 @@ public class MainActivity extends ActionBarActivity
     }
 
     @Override
-    public void onNavigationDrawerItemSelected(int position) {
-        // update the main content by replacing fragments
+    public void onNavigationDrawerItemSelected(Map<String, String> item) {
         Fragment fragment = new ProgrammesFragment();
         Bundle args = new Bundle();
-        args.putInt("POSITION", position);
-        //Hard coded as of now. Will have to come up with better design.
 
-        if(position == 0)
-        {
-            args.putString(getString(R.string.movies_language),"english");
-        }
-        else if(position == 1)
-        {
-            args.putString(getString(R.string.movies_language),"hindi");
-        }
+        category = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
+        language = item.get(NavigationDrawerFragment.ITEM_LANGUAGE);
+
+        args.putString(NavigationDrawerFragment.ITEM_CATEGORY, category);
+        args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, language);
+
         fragment.setArguments(args);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-       /* fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
-                .commit();*/
         fragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)
                 .commit();
-    }
-
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.english_movies);
-                break;
-            case 2:
-                mTitle = getString(R.string.hindi_movies);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
-        }
     }
 
     public void restoreActionBar() {
@@ -85,7 +68,6 @@ public class MainActivity extends ActionBarActivity
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -109,6 +91,14 @@ public class MainActivity extends ActionBarActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            DialogFragment fragment = new FiltersDialogFragment();
+
+            Bundle args = new Bundle();
+            args.putString(NavigationDrawerFragment.ITEM_CATEGORY, category);
+            args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, language);
+
+            fragment.setArguments(args);
+            fragment.show(getSupportFragmentManager(), "FiltersDialogFragment");
             return true;
         }
 
