@@ -87,12 +87,13 @@ public class ProgrammesFragment extends ListFragment {
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
     //Notification Intent data sent
-    public static final String NOTIFICATION_INTENT_TITLE = "com.bajrangi.moviesnow.TITLE";
+    public static final String NOTIFICATION_INTENT_JSON = "com.bajrangi.moviesnow.JSON";
     public static final String NOTIFICATION_INTENT_ID = "com.bajrangi.moviesnow.ID";
     public static final String NOTIFICATION_PREF = "notificationSubscription";
 
     // # of items left when API should prefetch data
     private final int PREFETCH_LIMIT = 5;
+    private final int MIN_PROGLIST_ITEMS = 10;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
     private GestureDetectorCompat mDetector;
 
@@ -335,7 +336,7 @@ public class ProgrammesFragment extends ListFragment {
                 calendar.setTime(lastProgramme.getStart());
 
                 //Checking if only 1 hour data is left or only 10 items left in
-                if(lastProgramme.getStart().getTime()-System.currentTimeMillis()<1*60*60*1000 || programmeList.size()<10)
+                if(lastProgramme.getStart().getTime()-System.currentTimeMillis()<1*60*60*1000 || programmeList.size()<MIN_PROGLIST_ITEMS)
                 {
                     //call loadData
                     loadData();
@@ -483,7 +484,7 @@ public class ProgrammesFragment extends ListFragment {
                 .toString();
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                (Request.Method.GET, url, null,  new Response.Listener<JSONObject>() {
 
                     @Override
                     public void onResponse(JSONObject response) {
