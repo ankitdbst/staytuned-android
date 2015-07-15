@@ -19,7 +19,7 @@ import java.util.StringTokenizer;
 
 public class SettingsDialogFragment extends DialogFragment {
 
-    public static final int[] duration = {5, 15, 60, 180};
+    public static final Integer[] duration = {5, 15, 60, 180};
     public static final String SETTINGS_PREF_FILE = "settings_pref";
     public static final String REMINDER_INTERVAL = "reminder_interval";
 
@@ -29,7 +29,7 @@ public class SettingsDialogFragment extends DialogFragment {
                 .getSharedPreferences(SETTINGS_PREF_FILE, 0);
         final SharedPreferences.Editor editor = settingsPref.edit();
 
-        final int d = (int) settingsPref.getLong(REMINDER_INTERVAL, 15*60*1000)/(1000*60);
+        final Integer d = (int) settingsPref.getLong(REMINDER_INTERVAL, 15*60*1000)/(1000*60);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(R.string.reminder_filter)
