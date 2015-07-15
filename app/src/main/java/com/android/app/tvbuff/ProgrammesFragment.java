@@ -600,6 +600,9 @@ public class ProgrammesFragment extends ListFragment {
                                     p.setThumbnailUrl(programmeObj.
                                             getString(TAG_PROGRAMME_IMAGE_URL));
                                     p.setChannelName(channelName);
+                                    p.setSubscribed(getActivity()
+                                            .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0)
+                                            .contains(programmeId));
                                     list.add(p);
                                 }
                             }
@@ -659,6 +662,10 @@ public class ProgrammesFragment extends ListFragment {
 
             fragment.setArguments(args);
             fragment.show(getActivity().getSupportFragmentManager(), "FiltersDialogFragment");
+            return true;
+        } else if (id == R.id.action_settings) {
+            DialogFragment fragment = new SettingsDialogFragment();
+            fragment.show(getActivity().getSupportFragmentManager(), "SettingsDialogFragment");
             return true;
         }
 
