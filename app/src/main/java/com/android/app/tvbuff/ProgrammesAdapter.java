@@ -41,10 +41,14 @@ import java.util.Locale;
 public class ProgrammesAdapter extends BaseAdapter {
     Context context;
     ArrayList<Programme> programmeArrayList;
+    SharedPreferences settingsPrefs;
 
     public ProgrammesAdapter(Context context, ArrayList<Programme> programmes) {
         this.context = context;
         this.programmeArrayList = programmes;
+
+        settingsPrefs = context
+                .getSharedPreferences(SettingsDialogFragment.SETTINGS_PREF_FILE, 0);
     }
 
     @Override
@@ -242,8 +246,17 @@ public class ProgrammesAdapter extends BaseAdapter {
         //int currTime = (int) System.currentTimeMillis();
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, (int)id, notificationIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        alarmManager.set(AlarmManager.RTC, System.currentTimeMillis()+10*1000, pendingIntent);
 
+        // default 15 mins
+        Long reminderInterval = settingsPrefs.getLong(SettingsDialogFragment.REMINDER_INTERVAL,
+                15*60*1000);
+        try {
+            Long startTime = programmejson.getLong("starttime");
+            alarmManager.set(AlarmManager.RTC, startTime - reminderInterval, pendingIntent);
+        } catch (JSONException e) {
+            // do not set alarm
+            Toast.makeText(context, R.string.notification_failure, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void cancelNotification(View view, long id, int position) {

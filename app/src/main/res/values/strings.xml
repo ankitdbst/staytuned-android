@@ -24,4 +24,14 @@
 
     <!-- FiltersDialogFragment -->
     <string name="channel_filter">Channel Filter</string>
+    <string name="reminder_filter">Remind me before:</string>
+
+    <string-array name="duration_array">
+        <item>5 min</item>
+        <item>15 min</item>
+        <item>1 hour</item>
+        <item>3 hour</item>
+    </string-array>
+
+    <string name="notification_failure">Set notification failed.</string>
 </resources>
