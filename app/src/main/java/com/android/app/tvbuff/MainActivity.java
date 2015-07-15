@@ -1,6 +1,5 @@
 package com.android.app.tvbuff;
 
-import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -25,8 +24,6 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
-    private String category;
-    private String language;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +45,8 @@ public class MainActivity extends ActionBarActivity
         Fragment fragment = new ProgrammesFragment();
         Bundle args = new Bundle();
 
-        category = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
-        language = item.get(NavigationDrawerFragment.ITEM_LANGUAGE);
+        String category = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
+        String language = item.get(NavigationDrawerFragment.ITEM_LANGUAGE);
 
         args.putString(NavigationDrawerFragment.ITEM_CATEGORY, category);
         args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, language);
@@ -75,7 +72,7 @@ public class MainActivity extends ActionBarActivity
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
-            getMenuInflater().inflate(R.menu.main_activity3_navigation, menu);
+            getMenuInflater().inflate(R.menu.menu_main, menu);
             restoreActionBar();
             return true;
         }
@@ -91,14 +88,6 @@ public class MainActivity extends ActionBarActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            DialogFragment fragment = new FiltersDialogFragment();
-
-            Bundle args = new Bundle();
-            args.putString(NavigationDrawerFragment.ITEM_CATEGORY, category);
-            args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, language);
-
-            fragment.setArguments(args);
-            fragment.show(getSupportFragmentManager(), "FiltersDialogFragment");
             return true;
         }
 

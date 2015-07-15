@@ -3,7 +3,8 @@
     package="com.android.app.tvbuff" >
 
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <!-- Permission to start Alarm on device reboot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="18" />
@@ -19,10 +20,16 @@
         android:theme="@style/AppTheme" >
 
         <receiver android:name="com.android.app.tvbuff.NotificationTriggerReceiver" />
+        <!-- Will not be called unless the application explicitly enables it -->
+        <receiver android:name="com.android.app.tvbuff.PhoneBootReceiver">
+           <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
 
         <activity
             android:name=".MainActivity"
-            android:label="@string/title_activity_main_activity3_navigation" >
+            android:label="@string/title_activity_main" >
             <intent-filter>
             <action android:name="android.intent.action.MAIN" />
 

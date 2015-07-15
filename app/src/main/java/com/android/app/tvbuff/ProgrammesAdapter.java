@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +19,8 @@ import android.widget.Toast;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.w3c.dom.Text;
 
 import java.text.DateFormat;
@@ -103,7 +106,7 @@ public class ProgrammesAdapter extends BaseAdapter {
                 int position = (Integer) v.getTag();
                 Programme programme = (Programme) getItem(position);
                 Long itemIdLong = Long.parseLong(programme.getId());
-
+                //TODO move it out of on click listener=
                 final SharedPreferences notificationSubscribed = context
                         .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0);
 
@@ -113,15 +116,28 @@ public class ProgrammesAdapter extends BaseAdapter {
                     editor.remove(programme.getId());
                     editor.apply();
 
-                    Toast.makeText(context, "Reminder cancelled", Toast.LENGTH_SHORT).show();
                     cancelNotification(view, itemIdLong, position);
+                    Toast.makeText(context, "Reminder cancelled", Toast.LENGTH_SHORT).show();
                 } else {
                     //add to subscription pref data.
-                    editor.putLong(programme.getId(), programme.getStop().getTime());
+                    //add json string in SharedPref
+                    JSONObject programmejson = new JSONObject();
+                    try {
+                        programmejson.put("title",programme.getTitle());
+                        programmejson.put("starttime",programme.getStart().getTime());
+                        programmejson.put("stoptime",programme.getStop().getTime());
+                        programmejson.put("channel",programme.getChannelName());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    editor.putString(programme.getId(),programmejson.toString());
+                    //editor.putLong(programme.getId(), programme.getStop().getTime());
+                    //editor.putString(programme.getId()+"_title",programme.getTitle());
                     editor.apply();
 
                     Toast.makeText(context, "Reminder set", Toast.LENGTH_SHORT).show();
-                    scheduleNotification(view, itemIdLong);
+                    scheduleNotification(view, itemIdLong,programmejson);
                 }
                 programme.setSubscribed(!programme.getSubscribed());
                 notifyDataSetChanged();
@@ -178,15 +194,17 @@ public class ProgrammesAdapter extends BaseAdapter {
         }
     }
 
-    private void scheduleNotification(View view, long id) {
-        //Log.v(TAG,"Schedule Notification");
+    private void scheduleNotification(View view, long id, JSONObject programmejson) {
+        Log.v("scheduleNotification",""+ id);
         TextView title = (TextView) view.findViewById(R.id.title);
         Intent notificationIntent = new Intent(context, NotificationTriggerReceiver.class);
+        //Intent notificationIntent2 = new Intent(context, PhoneBootReceiver.class);
+        //context.sendBroadcast(notificationIntent2);
         //Log.v(TAG, "title :" + title.getText().toString() + " ,id :" + id);
-        notificationIntent.putExtra(ProgrammesFragment.NOTIFICATION_INTENT_TITLE,title.getText().toString());
+        notificationIntent.putExtra(ProgrammesFragment.NOTIFICATION_INTENT_JSON,programmejson.toString());
         notificationIntent.putExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID,id);
         //int currTime = (int) System.currentTimeMillis();
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, (int)id, notificationIntent,PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, (int)id, notificationIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.RTC, System.currentTimeMillis()+10*1000, pendingIntent);
 

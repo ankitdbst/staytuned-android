@@ -7,19 +7,28 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.ListFragment;
 import android.support.v4.view.GestureDetectorCompat;
+import android.support.v4.view.ViewCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.Html;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -40,13 +49,20 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.Vector;
 
+/**
+ * Created by nitbhati on 7/9/15.
+ */
 
-public class ProgrammesFragment extends ListFragment {
+public class ProgrammesFragment extends ListFragment
+        implements FiltersDialogFragment.FiltersDialogListener {
 
 
     public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
@@ -96,12 +112,13 @@ public class ProgrammesFragment extends ListFragment {
     public static final String TAG_PROGRAMME_DURATION = "duration";
 
     //Notification Intent data sent
-    public static final String NOTIFICATION_INTENT_TITLE = "com.bajrangi.moviesnow.TITLE";
+    public static final String NOTIFICATION_INTENT_JSON = "com.bajrangi.moviesnow.JSON";
     public static final String NOTIFICATION_INTENT_ID = "com.bajrangi.moviesnow.ID";
     public static final String NOTIFICATION_PREF = "notificationSubscription";
 
     // # of items left when API should prefetch data
     private final int PREFETCH_LIMIT = 5;
+    private final int MIN_PROGLIST_ITEMS = 10;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
 
     private static CurlSingleton mInstance;
@@ -120,9 +137,29 @@ public class ProgrammesFragment extends ListFragment {
     /* Indicate data being fetched */
     private boolean loading = false;
     /* List of channels to retrieve programme listings from */
-    private String channelList;
+    private List<String> channelList;
     /* Track the count of pages retrieved from the API */
     private int pageCount = 0;
+
+    /* Category with which the fragment is instantiated */
+    private String currentCategory;
+    /* Language with which the fragment is instantiated */
+    private String currentLanguage;
+    /* Pref key for current selection */
+    private String currentPrefKey;
+
+	private SwipeRefreshLayout mSwipeRefreshLayout;
+
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        channelList = getChannelListFromPref();
+        loadData();
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+
+    }
 
     public static class CurlSingleton {
         private RequestQueue mRequestQueue;
@@ -180,18 +217,121 @@ public class ProgrammesFragment extends ListFragment {
         adapter = new ProgrammesAdapter(getActivity(), programmeList);
     }
 
+    private List<String> getChannelListFromPref() {
+        if (channelList == null) {
+            channelList = new ArrayList<>();
+        } else {
+            channelList.clear();
+        }
+
+        Map<String, ?> channelListMap = getActivity().getSharedPreferences(currentPrefKey, 0)
+                .getAll();
+        for (Map.Entry<String, ?> entry : channelListMap.entrySet()) {
+            if ((Boolean)entry.getValue()) {
+                channelList.add(entry.getKey());
+            }
+        }
+
+        return channelList;
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Create the list fragment's content view by calling the super method
+        final View listFragmentView = super.onCreateView(inflater, container, savedInstanceState);
+
+        // Now create a SwipeRefreshLayout to wrap the fragment's content view
+        mSwipeRefreshLayout = new ListFragmentSwipeRefreshLayout(container.getContext());
+        // Add the list fragment's content view to the SwipeRefreshLayout, making sure that it fills
+        // the SwipeRefreshLayout
+        mSwipeRefreshLayout.addView(listFragmentView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+        // Make sure that the SwipeRefreshLayout will fill the fragment
+        mSwipeRefreshLayout.setLayoutParams(
+                new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // Now return the SwipeRefreshLayout as this fragment's content view
+        return mSwipeRefreshLayout;
+    }
+
+    public void setOnRefreshListener(SwipeRefreshLayout.OnRefreshListener listener) {
+        mSwipeRefreshLayout.setOnRefreshListener(listener);
+    }
+
+    public boolean isRefreshing() {
+        return mSwipeRefreshLayout.isRefreshing();
+    }
+
+    public void setRefreshing(boolean refreshing) {
+        mSwipeRefreshLayout.setRefreshing(refreshing);
+    }
+
+    public void setColorScheme(int colorRes1, int colorRes2, int colorRes3, int colorRes4) {
+        mSwipeRefreshLayout.setColorSchemeResources(colorRes1, colorRes2, colorRes3, colorRes4);
+    }
+
+    public SwipeRefreshLayout getSwipeRefreshLayout() {
+        return mSwipeRefreshLayout;
+    }
+
+    private class ListFragmentSwipeRefreshLayout extends SwipeRefreshLayout {
+
+        public ListFragmentSwipeRefreshLayout(Context context) {
+            super(context);
+        }
+
+        /**
+         * As mentioned above, we need to override this method to properly signal when a
+         * 'swipe-to-refresh' is possible.
+         *
+         * @return true if the {@link android.widget.ListView} is visible and can scroll up.
+         */
+        @Override
+        public boolean canChildScrollUp() {
+            final ListView listView = getListView();
+            if (listView.getVisibility() == View.VISIBLE) {
+                return canListViewScrollUp(listView);
+            } else {
+                return false;
+            }
+        }
+
+    }
+    /**
+     * Utility method to check whether a {@link ListView} can scroll up from it's current position.
+     * Handles platform version differences, providing backwards compatible functionality where
+     * needed.
+     */
+    private static boolean canListViewScrollUp(ListView listView) {
+        if (android.os.Build.VERSION.SDK_INT >= 14) {
+            // For ICS and above we can call canScrollVertically() to determine this
+            return ViewCompat.canScrollVertically(listView, -1);
+        } else {
+            // Pre-ICS we need to manually check the first visible item and the child view's top
+            // value
+            return listView.getChildCount() > 0 &&
+                    (listView.getFirstVisiblePosition() > 0
+                            || listView.getChildAt(0).getTop() < listView.getPaddingTop());
+        }
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        setHasOptionsMenu(true);
 
         Bundle args = getArguments();
 
-        String category = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
-        String language = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
-        String prefKey = getActivity().getPackageName() + "." + category + "_" + language;
+        currentCategory = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
+        currentLanguage = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
+        currentPrefKey = getActivity().getPackageName() + "." +
+                currentCategory + "_" + currentLanguage;
 
         // Local storage :: Retrieve channel listings prefs
-        final SharedPreferences channelListPref = getActivity().getSharedPreferences(prefKey, 0);
+        final SharedPreferences channelListPref = getActivity()
+                .getSharedPreferences(currentPrefKey, 0);
         final SharedPreferences.Editor editor = channelListPref.edit();
 
         ListView listView = getListView();
@@ -232,16 +372,60 @@ public class ProgrammesFragment extends ListFragment {
             }
         });
 
-        // Bind to programme adapter
+        setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
+
+            @Override
+            public void onRefresh() {
+                //called when swipe up detected
+                Toast.makeText(getActivity(), "Refresh event triggered", Toast.LENGTH_SHORT).show();
+                loadData();
+                //adapter.notifyDataSetChanged();
+                //traverse through programme list and remove which have been completed
+                int index =0,indicesindex=0;
+                List<Integer> oldProgrammes = new ArrayList<>();
+                //int indices[] = new int[1000];
+                Log.v(TAG,"removing programme "+programmeList.size());
+                //int
+                for(Programme p:programmeList)
+                {
+                    if(p.getStop().getTime()-System.currentTimeMillis()<0) {
+                        Log.v(TAG, "removing programme " + index);
+                        //remove this programme
+                        oldProgrammes.add(index);
+                        //programmeList.remove(programmeList.indexOf(p));
+                    }
+                    index++;
+                }
+                for(int i=0;i<oldProgrammes.size();i++)
+                {
+                    programmeList.remove(oldProgrammes.get(i).intValue());
+                }
+                Programme lastProgramme = programmeList.get(programmeList.size() - 1);
+                //setting calendar to the timestamp of last programmelist element
+                calendar.setTime(lastProgramme.getStart());
+
+                //Checking if only 1 hour data is left or only 10 items left in
+                if(lastProgramme.getStart().getTime()-System.currentTimeMillis()<1*60*60*1000 || programmeList.size()<MIN_PROGLIST_ITEMS)
+                {
+                    //call loadData
+                    loadData();
+                }
+                else
+                {
+                    adapter.notifyDataSetChanged();
+                }
+                setRefreshing(false);
+            }
+        });
+
+        // Bind to our new adapter.
         setListAdapter(adapter);
 
         // Always load channel listing from the prefs, if present
-        if (channelListPref.contains(CHANNEL_LIST)) {
-            channelList = channelListPref.getString(CHANNEL_LIST, "");
-            if (channelList != null && !channelList.isEmpty()) {
-                loadData();
-                return;
-            }
+        channelList = getChannelListFromPref();
+        if (channelList.size() > 0) {
+            loadData();
+            return;
         }
 
         String url = new Uri.Builder()
@@ -249,8 +433,8 @@ public class ProgrammesFragment extends ListFragment {
                 .authority(DATA_SOURCE_URL)
                 .path(CHANNEL_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
-                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, category)
-                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, language)
+                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, currentCategory)
+                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, currentLanguage)
                 .build()
                 .toString();
 
@@ -258,10 +442,11 @@ public class ProgrammesFragment extends ListFragment {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        channelList = response;
-                        StringTokenizer tokenizer = new StringTokenizer(channelList, ",");
+                        StringTokenizer tokenizer = new StringTokenizer(response, ",");
                         while (tokenizer.hasMoreTokens()) {
-                            editor.putBoolean(tokenizer.nextToken(), true);
+                            String token = tokenizer.nextToken();
+                            channelList.add(token);
+                            editor.putBoolean(token, true);
                         }
                         // commit changes async
                         editor.apply();
@@ -354,19 +539,29 @@ public class ProgrammesFragment extends ListFragment {
         calendar.add(Calendar.HOUR_OF_DAY, 3);
         String toDate = dateFormat.format(calendar.getTime());
 
+        int idx = 0, size = channelList.size();
+        StringBuilder channelListStr = new StringBuilder();
+        for (String channel : channelList) {
+            channelListStr.append(channel);
+            if (idx < size-1) {
+                channelListStr.append(",");
+            }
+            idx++;
+        }
+
         String url = new Uri.Builder()
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
                 .path(SCHEDULE_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
-                .appendQueryParameter(CHANNEL_LIST, channelList)
+                .appendQueryParameter(CHANNEL_LIST, channelListStr.toString())
                 .appendQueryParameter(CHANNEL_LIST_FROM_DATE, fromDate)
                 .appendQueryParameter(CHANNEL_LIST_TO_DATE, toDate)
                 .build()
                 .toString();
 
         JsonObjectRequest jsObjRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
+                (Request.Method.GET, url, null,  new Response.Listener<JSONObject>() {
 
                     @Override
                     public void onResponse(JSONObject response) {
@@ -455,6 +650,24 @@ public class ProgrammesFragment extends ListFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_filter) {
+            DialogFragment fragment = new FiltersDialogFragment();
+
+            Bundle args = new Bundle();
+            args.putString(NavigationDrawerFragment.ITEM_CATEGORY, currentCategory);
+            args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, currentLanguage);
+
+            fragment.setArguments(args);
+            fragment.show(getActivity().getSupportFragmentManager(), "FiltersDialogFragment");
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }

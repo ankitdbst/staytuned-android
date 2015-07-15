@@ -5,9 +5,13 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by nitbhati on 7/5/15.
@@ -23,9 +27,11 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
 
     private void sendNotification(Context context,Intent intent) {
         //create intent that will be fired when notification is clicked
-
         Log.v("receiver","FiringNotification");
-        Intent notificationIntent = new Intent(context, ProgrammesFragment.class);
+        Intent notificationIntent = new Intent(context, MainActivity.class);
+        JSONObject programmejson;
+        String title="",channel="";
+        long starttime,stoptime;
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
         //TODO refresh on swipe up
         //TODO phone reboot notification
@@ -49,16 +55,26 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         builder.setVisibility(1);
 
         builder.setContentIntent(pendingIntent);
-        Log.v("receiver", intent.getStringExtra("com.bajrangi.moviesnow.TITLE"));
-        Log.v("receiver","notification id: "+(int) intent.getLongExtra("com.bajrangi.moviesnow.ID",0));
-        builder.setContentTitle(intent.getStringExtra("com.bajrangi.moviesnow.TITLE"));
-        builder.setContentText("Time to learn about notifications!");
-        builder.setSubText("Tap to view documentation about notifications.");
+        Log.v("receiver", intent.getStringExtra(ProgrammesFragment.NOTIFICATION_INTENT_JSON));
+        Log.v("receiver", "notification id: " + (int) intent.getLongExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID, 0));
+        String jsonString = intent.getStringExtra(ProgrammesFragment.NOTIFICATION_INTENT_JSON);
+        try {
+                programmejson = new JSONObject(jsonString);
+                title = programmejson.getString("title");
+                channel = programmejson.getString("channel");
+                starttime = programmejson.getLong("starttime");
+                stoptime = programmejson.getLong("stoptime");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        builder.setContentTitle(title);
+        builder.setContentText("On "+channel);
+        builder.setSubText("In 15 minutes");
 
         //Send the notification. This will immediately display the notification icon in the
         //         notification bar.
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify((int) intent.getLongExtra("com.bajrangi.moviesnow.ID",0), builder.build());
+        notificationManager.notify((int) intent.getLongExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID,0), builder.build());
     }
 }

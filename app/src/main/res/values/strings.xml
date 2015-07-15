@@ -1,19 +1,13 @@
 <resources>
-    <string name="app_name">TVBuff</string>
-    <string name="title_activity_main">MainActivity</string>
+    <string name="app_name">TV Buff</string>
+    <string name="title_activity_main">TV Buff</string>
 
     <string name="action_settings">Settings</string>
-    <string name="title_activity_main_activity2_action_bar">MainActivity2ActionBar</string>
-    <string name="title_activity_main_activity3_navigation">MainActivity3Navigation</string>
-
-    <string name="title_section1">Section 1</string>
-    <string name="title_section2">Section 2</string>
-    <string name="title_section3">Section 3</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
-    <string name="action_example">Example action</string>
+    <string name="action_filter">Channel Filter</string>
 
     <!-- IMDB -->
     <string name="actors_label">Actors:</string>
@@ -30,11 +24,4 @@
 
     <!-- FiltersDialogFragment -->
     <string name="channel_filter">Channel Filter</string>
-
-    <string-array name="planets_array">
-        <item>Mercury</item>
-        <item>Venus</item>
-        <item>Earth</item>
-        <item>Mars</item>
-    </string-array>
 </resources>
