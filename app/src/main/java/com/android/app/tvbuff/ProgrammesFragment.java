@@ -55,27 +55,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
-/**
- * Created by nitbhati on 7/9/15.
- */
-
-public class ProgrammesFragment extends ListFragment
-        implements FiltersDialogFragment.FiltersDialogListener {
-
+public class ProgrammesFragment extends ListFragment {
 
     public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
     public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
     public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
-
-    /** Shared Preference list file key for Channel Lists
-    Pref file for each category
-    Can store:
-        1. Channel list to query
-        2. Genre to filter
-        3. Imdb rating to fetch YES/NO etc.
-    */
 
     // Feed new programme categories here
     public static final String programmeCategories[] = {
@@ -117,14 +102,14 @@ public class ProgrammesFragment extends ListFragment
     public static final String NOTIFICATION_PREF = "notificationSubscription";
 
     // # of items left when API should prefetch data
-    private final int PREFETCH_LIMIT = 5;
+    private final int PREFETCH_LIMIT = 8;
     private final int MIN_PROGLIST_ITEMS = 10;
     private final DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmm", Locale.ENGLISH);
 
     private static CurlSingleton mInstance;
 
     /* Calendar instance */
-    private final Calendar calendar = Calendar.getInstance();
+    private Calendar calendar = Calendar.getInstance();
 
     private ProgressDialog pDialog;
     /* Store programme items */
@@ -149,17 +134,6 @@ public class ProgrammesFragment extends ListFragment
     private String currentPrefKey;
 
 	private SwipeRefreshLayout mSwipeRefreshLayout;
-
-    @Override
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        channelList = getChannelListFromPref();
-        loadData();
-    }
-
-    @Override
-    public void onDialogNegativeClick(DialogFragment dialog) {
-
-    }
 
     public static class CurlSingleton {
         private RequestQueue mRequestQueue;
@@ -330,6 +304,13 @@ public class ProgrammesFragment extends ListFragment
                 currentCategory + "_" + currentLanguage;
 
         // Local storage :: Retrieve channel listings prefs
+        /** Shared Preference list file key for Channel Lists
+         Pref file for each category
+         Can store:
+         1. Channel list to query
+         2. Genre to filter
+         3. Imdb rating to fetch YES/NO etc.
+         */
         final SharedPreferences channelListPref = getActivity()
                 .getSharedPreferences(currentPrefKey, 0);
         final SharedPreferences.Editor editor = channelListPref.edit();
@@ -344,11 +325,13 @@ public class ProgrammesFragment extends ListFragment
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount &&
-                        totalItemCount != 0) {
+                if ((totalItemCount-firstVisibleItem < PREFETCH_LIMIT && visibleItemCount > 0) ||
+                        (firstVisibleItem + visibleItemCount == totalItemCount &&
+                        totalItemCount != 0) ||
+                        (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount)) {
                     if (!loading) {
                         loading = true;
-                        loadData();
+                        loadData(false);
                     }
                 }
             }
@@ -378,7 +361,7 @@ public class ProgrammesFragment extends ListFragment
             public void onRefresh() {
                 //called when swipe up detected
                 Toast.makeText(getActivity(), "Refresh event triggered", Toast.LENGTH_SHORT).show();
-                loadData();
+                //loadData();
                 //adapter.notifyDataSetChanged();
                 //traverse through programme list and remove which have been completed
                 int index =0,indicesindex=0;
@@ -408,7 +391,7 @@ public class ProgrammesFragment extends ListFragment
                 if(lastProgramme.getStart().getTime()-System.currentTimeMillis()<1*60*60*1000 || programmeList.size()<MIN_PROGLIST_ITEMS)
                 {
                     //call loadData
-                    loadData();
+                    loadData(false);
                 }
                 else
                 {
@@ -424,7 +407,7 @@ public class ProgrammesFragment extends ListFragment
         // Always load channel listing from the prefs, if present
         channelList = getChannelListFromPref();
         if (channelList.size() > 0) {
-            loadData();
+            loadData(false);
             return;
         }
 
@@ -452,7 +435,7 @@ public class ProgrammesFragment extends ListFragment
                         editor.apply();
 
                         loading = true;
-                        loadData();
+                        loadData(false);
                     }
                 },
                 new Response.ErrorListener() {
@@ -533,7 +516,19 @@ public class ProgrammesFragment extends ListFragment
     public ProgrammesFragment() {
     }
 
-    private void loadData() {
+    public void loadData(boolean reset) {
+        if (reset) {
+            calendar = Calendar.getInstance();
+            // Fetch current channel list
+            channelList = getChannelListFromPref();
+            // Reset adapter
+            programmeList.clear();
+            programmeMap.clear();
+            // loading
+            loading = true;
+            pDialog.show();
+        }
+
         String fromDate = dateFormat.format(calendar.getTime());
         // Retrieve all the listings from t to t+3*pageCount hours
         calendar.add(Calendar.HOUR_OF_DAY, 3);
@@ -641,7 +636,6 @@ public class ProgrammesFragment extends ListFragment
 
         mInstance.addToRequestQueue(jsObjRequest);
     }
-
 
     @Override
     public void onStop() {

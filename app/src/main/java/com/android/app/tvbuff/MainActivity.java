@@ -1,5 +1,6 @@
 package com.android.app.tvbuff;
 
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -8,12 +9,13 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
+import android.widget.Adapter;
 
 import java.util.Map;
 
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks, FiltersDialogFragment.FiltersDialogListener {
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -24,6 +26,7 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+    private ProgrammesFragment programmesFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +45,8 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void onNavigationDrawerItemSelected(Map<String, String> item) {
-        Fragment fragment = new ProgrammesFragment();
+        programmesFragment = new ProgrammesFragment();
+
         Bundle args = new Bundle();
 
         String category = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
@@ -51,11 +55,11 @@ public class MainActivity extends ActionBarActivity
         args.putString(NavigationDrawerFragment.ITEM_CATEGORY, category);
         args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, language);
 
-        fragment.setArguments(args);
+        programmesFragment.setArguments(args);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
+                .replace(R.id.container, programmesFragment)
                 .commit();
     }
 
@@ -92,5 +96,15 @@ public class MainActivity extends ActionBarActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        programmesFragment.loadData(true);
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+
     }
 }
