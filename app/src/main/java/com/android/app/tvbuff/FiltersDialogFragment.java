@@ -9,7 +9,9 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 public class FiltersDialogFragment extends DialogFragment {
@@ -27,22 +29,29 @@ public class FiltersDialogFragment extends DialogFragment {
 
         // Avoid network call, if we have the channel list already fetched from the previous time.
         final SharedPreferences channelListPref = getActivity().getSharedPreferences(prefKey, 0);
-
-        String channelListStr = channelListPref.getString(ProgrammesFragment.CHANNEL_LIST, "");
-        StringTokenizer tokenizer = new StringTokenizer(channelListStr, ",");
+        SharedPreferences.Editor editor = channelListPref.edit();
 
         List<String> channelList = new ArrayList<>();
-        while (tokenizer.hasMoreTokens()) {
-            String token = tokenizer.nextToken();
-            channelList.add(token);
+        Map<String, ?> channelListMap = channelListPref.getAll();
+        for (Map.Entry<String, ?> entry : channelListMap.entrySet()) {
+            channelList.add(entry.getKey());
         }
+
+        int idx = 0;
+        boolean[] channelsEnabled = new boolean[channelList.size()];
+        for (Map.Entry<String, ?> entry : channelListMap.entrySet()) {
+            if (entry.getValue().toString().equals("true")) {
+                channelsEnabled[idx++] = true;
+            }
+        }
+
         CharSequence[] channels = channelList.toArray(new CharSequence[channelList.size()]);
 
         // Set the dialog title
         builder.setTitle(R.string.channel_filter)
                 // Specify the list array, the items to be selected by default (null for none),
                 // and the listener through which to receive callbacks when items are selected
-                .setMultiChoiceItems(channels, null,
+                .setMultiChoiceItems(channels, channelsEnabled,
                         new DialogInterface.OnMultiChoiceClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which,

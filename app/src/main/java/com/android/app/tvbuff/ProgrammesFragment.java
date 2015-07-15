@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 
 public class ProgrammesFragment extends ListFragment {
@@ -187,14 +188,14 @@ public class ProgrammesFragment extends ListFragment {
 
         String category = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
         String language = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
-
         String prefKey = getActivity().getPackageName() + "." + category + "_" + language;
 
-        // Avoid network call, if we have the channel list already fetched from the previous time.
+        // Local storage :: Retrieve channel listings prefs
         final SharedPreferences channelListPref = getActivity().getSharedPreferences(prefKey, 0);
+        final SharedPreferences.Editor editor = channelListPref.edit();
 
         ListView listView = getListView();
-        listView.setOnScrollListener(new AbsListView.OnScrollListener(){
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
 
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
@@ -258,9 +259,10 @@ public class ProgrammesFragment extends ListFragment {
                     @Override
                     public void onResponse(String response) {
                         channelList = response;
-
-                        SharedPreferences.Editor editor = channelListPref.edit();
-                        editor.putString(CHANNEL_LIST, channelList);
+                        StringTokenizer tokenizer = new StringTokenizer(channelList, ",");
+                        while (tokenizer.hasMoreTokens()) {
+                            editor.putBoolean(tokenizer.nextToken(), true);
+                        }
                         // commit changes async
                         editor.apply();
 
