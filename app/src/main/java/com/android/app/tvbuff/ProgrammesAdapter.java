@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,17 +13,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.NetworkImageView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -82,7 +90,7 @@ public class ProgrammesAdapter extends BaseAdapter {
 
         NetworkImageView mNetworkImageView = (NetworkImageView) convertView.findViewById(R.id.thumbnail);
 
-        ProgrammesFragment.CurlSingleton curlSingleton = ProgrammesFragment.CurlSingleton.getInstance(context);
+        final ProgrammesFragment.CurlSingleton curlSingleton = ProgrammesFragment.CurlSingleton.getInstance(context);
         // Get the ImageLoader through your singleton class.
         ImageLoader mImageLoader = curlSingleton.getImageLoader();
 
@@ -104,9 +112,10 @@ public class ProgrammesAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 int position = (Integer) v.getTag();
-                Programme programme = (Programme) getItem(position);
+                final Bitmap imageNotification;
+                final Programme programme = (Programme) getItem(position);
                 Long itemIdLong = Long.parseLong(programme.getId());
-                //TODO move it out of on click listener=
+                //TODO move it out of on click listener
                 final SharedPreferences notificationSubscribed = context
                         .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0);
 
@@ -135,6 +144,33 @@ public class ProgrammesAdapter extends BaseAdapter {
                     //editor.putLong(programme.getId(), programme.getStop().getTime());
                     //editor.putString(programme.getId()+"_title",programme.getTitle());
                     editor.apply();
+
+                    //Retrieve thumbnail from url and store it in internal storage to be used later by notification
+                    ImageRequest imageRequest = new ImageRequest(programme.getThumbnailUrl(),
+                            new Response.Listener<Bitmap>() {
+                            FileOutputStream fos;
+                                @Override
+                                public void onResponse(Bitmap bitmap) {
+                                //store this bitmap to internal storage
+                                    try {
+                                        fos = context.openFileOutput(programme.getId(),Context.MODE_PRIVATE);
+                                        bitmap.compress(Bitmap.CompressFormat.PNG,100,fos);
+                                        fos.close();
+                                    } catch (FileNotFoundException e) {
+                                        e.printStackTrace();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            },0,0, ImageView.ScaleType.CENTER_INSIDE,null,
+                            new Response.ErrorListener() {
+
+                                @Override
+                                public void onErrorResponse(VolleyError volleyError) {
+
+                                }
+                            });
+                    curlSingleton.addToRequestQueue(imageRequest);
 
                     Toast.makeText(context, "Reminder set", Toast.LENGTH_SHORT).show();
                     scheduleNotification(view, itemIdLong,programmejson);
