@@ -603,6 +603,7 @@ public class ProgrammesFragment extends ListFragment {
                                     p.setSubscribed(getActivity()
                                             .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0)
                                             .contains(programmeId));
+                                    IMDb.queue(adapter, null, p, mInstance);
                                     list.add(p);
                                 }
                             }

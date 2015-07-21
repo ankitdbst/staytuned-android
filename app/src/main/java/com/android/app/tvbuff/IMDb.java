@@ -114,7 +114,9 @@ public class IMDb {
                             imDbDetail.setDirectors(jsonObject.getString(DIRECTOR));
 
                             programme.setImDbDetail(imDbDetail);
-                            adapter.showIMDbInfo(imDbDetail, convertView);
+                            if (convertView != null) {
+                                adapter.showIMDbInfo(imDbDetail, convertView);
+                            }
                         } catch (JSONException e) {
                             Log.d(TAG, "Error parsing response: " + e.getMessage());
                         }

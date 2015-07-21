@@ -196,7 +196,6 @@ public class ProgrammesAdapter extends BaseAdapter {
         TextView plot = (TextView) convertView.findViewById(R.id.plot);
         TextView actors = (TextView) convertView.findViewById(R.id.actors);
         TextView directors = (TextView) convertView.findViewById(R.id.directors);
-        rating.setText("N/A");
         plot.setText("");
         actors.setText("");
         directors.setText("");
@@ -204,6 +203,7 @@ public class ProgrammesAdapter extends BaseAdapter {
         // Queue IMDb query for fetching movie information
         IMDbDetail imDbDetail = programme.getImDbDetail();
         if (programme.isImDbNA()) {
+            rating.setText("N/A");
             IMDb.queue(this, convertView, programme, curlSingleton);
         } else {
             showIMDbInfo(imDbDetail, convertView);
@@ -218,7 +218,7 @@ public class ProgrammesAdapter extends BaseAdapter {
 
         if (currDate.after(date)) {
             long minsElapsed = (currDate.getTime() - date.getTime())/(1000*60);
-            return "Running since: " + minsElapsed + " min(s)";
+            return "Started " + minsElapsed + " min(s) ago";
         } else {
             DateFormat dateFormatter = new SimpleDateFormat("h:mm a", Locale.ENGLISH);
             DateFormat dateFormatter2 = new SimpleDateFormat("EEE, MMM d, h:mm a", Locale.ENGLISH);
