@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ViewCompat;
@@ -25,14 +26,17 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.android.volley.NetworkError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -112,6 +116,7 @@ public class ProgrammesFragment extends ListFragment {
     private Calendar calendar = Calendar.getInstance();
 
     private ProgressDialog pDialog;
+
     /* Store programme items */
     private ArrayList<Programme> programmeList;
     /* Store programmes currently running to invalidate duplicates during
@@ -292,6 +297,12 @@ public class ProgrammesFragment extends ListFragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        loadData(true);
+    }
+
+    @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         setHasOptionsMenu(true);
@@ -359,45 +370,7 @@ public class ProgrammesFragment extends ListFragment {
 
             @Override
             public void onRefresh() {
-                //called when swipe up detected
-                Toast.makeText(getActivity(), "Refresh event triggered", Toast.LENGTH_SHORT).show();
-                //loadData();
-                //adapter.notifyDataSetChanged();
-                //traverse through programme list and remove which have been completed
-                int index =0,indicesindex=0;
-                List<Integer> oldProgrammes = new ArrayList<>();
-                //int indices[] = new int[1000];
-                Log.v(TAG,"removing programme "+programmeList.size());
-                //int
-                for(Programme p:programmeList)
-                {
-                    if(p.getStop().getTime()-System.currentTimeMillis()<0) {
-                        Log.v(TAG, "removing programme " + index);
-                        //remove this programme
-                        oldProgrammes.add(index);
-                        //programmeList.remove(programmeList.indexOf(p));
-                    }
-                    index++;
-                }
-                for(int i=0;i<oldProgrammes.size();i++)
-                {
-                    programmeList.remove(oldProgrammes.get(i).intValue());
-                }
-                Programme lastProgramme = programmeList.get(programmeList.size() - 1);
-                //setting calendar to the timestamp of last programmelist element
-                calendar.setTime(lastProgramme.getStart());
-
-                //Checking if only 1 hour data is left or only 10 items left in
-                if(lastProgramme.getStart().getTime()-System.currentTimeMillis()<1*60*60*1000 || programmeList.size()<MIN_PROGLIST_ITEMS)
-                {
-                    //call loadData
-                    loadData(false);
-                }
-                else
-                {
-                    adapter.notifyDataSetChanged();
-                }
-                setRefreshing(false);
+                onRefreshHandler();
             }
         });
 
@@ -448,6 +421,44 @@ public class ProgrammesFragment extends ListFragment {
                 });
 
         mInstance.addToRequestQueue(channelListRequest);
+    }
+
+    private void onRefreshHandler() {
+        if (programmeList.size() == 0) {
+            loadData(true);
+            return;
+        }
+
+        //traverse through programme list and remove which have been completed
+        int index = 0;
+        List<Integer> oldProgrammes = new ArrayList<>();
+
+        for(Programme p:programmeList) {
+            if(p.getStop().getTime()-System.currentTimeMillis()<0) {
+                oldProgrammes.add(index);
+            }
+            index++;
+        }
+
+        for(int i=0;i<oldProgrammes.size();i++) {
+            programmeList.remove(oldProgrammes.get(i).intValue());
+        }
+
+        Programme lastProgramme = programmeList.get(programmeList.size() - 1);
+
+        //setting calendar to the timestamp of last programmelist element
+        // Edge case: programme list empty
+        calendar.setTime(lastProgramme.getStart());
+
+        //Checking if only 1 hour data is left or only 10 items left in
+        if(programmeList.size()<MIN_PROGLIST_ITEMS ||
+                lastProgramme.getStart().getTime()-System.currentTimeMillis()< 60*60*1000) {
+            //call loadData
+            loadData(false);
+        } else {
+            adapter.notifyDataSetChanged();
+        }
+        setRefreshing(false);
     }
 
     public int dpToPx(int value) {
@@ -635,6 +646,17 @@ public class ProgrammesFragment extends ListFragment {
                         if (pDialog.isShowing())
                             pDialog.dismiss();
                         loading = false;
+                        if (error instanceof NetworkError || error instanceof TimeoutError) {
+                            ConnectionFailureFragment connectionFailureFragment = new
+                                    ConnectionFailureFragment();
+                            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
+                            fragmentManager.beginTransaction()
+                                    .replace(R.id.container, connectionFailureFragment)
+                                    .commit();
+
+                            Toast.makeText(getActivity(), R.string.connection_failure,
+                                    Toast.LENGTH_LONG).show();
+                        }
                     }
                 });
 
@@ -654,7 +676,7 @@ public class ProgrammesFragment extends ListFragment {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_filter) {
+        if (id == R.id.channel_filter) {
             DialogFragment fragment = new FiltersDialogFragment();
 
             Bundle args = new Bundle();

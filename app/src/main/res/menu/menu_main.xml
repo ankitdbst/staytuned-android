@@ -3,7 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.android.app.tvbuff.MainActivity">
     <item android:id="@+id/action_filter" android:title="@string/action_filter"
-        app:showAsAction="withText|ifRoom" />
+        app:showAsAction="withText|ifRoom"
+        android:icon="@drawable/ic_filter_list_white_24dp">
+        <menu xmlns:android="http://schemas.android.com/apk/res/android">
+            <item android:id="@+id/channel_filter" android:title="@string/action_channel_filter"/>
+            <item android:id="@+id/imdb_filter" android:title="@string/action_imdb_rating"/>
+        </menu>
+    </item>
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
+        android:icon="@drawable/ic_tune_white_24dp"
         android:orderInCategory="100" app:showAsAction="withText|ifRoom" />
 </menu>
