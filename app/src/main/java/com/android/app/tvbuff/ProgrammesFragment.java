@@ -20,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
@@ -30,6 +31,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.NetworkError;
@@ -46,6 +48,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -68,7 +71,8 @@ public class ProgrammesFragment extends ListFragment {
 
     // Feed new programme categories here
     public static final String programmeCategories[] = {
-        "movies"
+        "movies",
+        "sports"
     };
 
     // Feed new programme languages here
@@ -130,6 +134,7 @@ public class ProgrammesFragment extends ListFragment {
     private List<String> channelList;
     /* Track the count of pages retrieved from the API */
     private int pageCount = 0;
+    private int firstVisibleItemCount = 0;
 
     /* Category with which the fragment is instantiated */
     private String currentCategory;
@@ -139,6 +144,7 @@ public class ProgrammesFragment extends ListFragment {
     private String currentPrefKey;
 
 	private SwipeRefreshLayout mSwipeRefreshLayout;
+    private TextView scrollToTop;
 
     public static class CurlSingleton {
         private RequestQueue mRequestQueue;
@@ -217,7 +223,10 @@ public class ProgrammesFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Create the list fragment's content view by calling the super method
-        final View listFragmentView = super.onCreateView(inflater, container, savedInstanceState);
+        //final View listFragmentView = super.onCreateView(inflater, container, savedInstanceState);
+        final View listFragmentView = inflater.inflate(R.layout.fragment_programmes, container , false);
+        scrollToTop = (TextView) listFragmentView.findViewById(R.id.scrollToTop);
+        //tv.setText("scrolling");
 
         // Now create a SwipeRefreshLayout to wrap the fragment's content view
         mSwipeRefreshLayout = new ListFragmentSwipeRefreshLayout(container.getContext());
@@ -326,7 +335,16 @@ public class ProgrammesFragment extends ListFragment {
                 .getSharedPreferences(currentPrefKey, 0);
         final SharedPreferences.Editor editor = channelListPref.edit();
 
-        ListView listView = getListView();
+        final ListView listView = getListView();
+
+        scrollToTop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listView.smoothScrollToPosition(0);
+                //listView.setFastScrollEnabled(true);
+                //listView.fling(100);
+            }
+        });
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {
 
             @Override
@@ -336,15 +354,30 @@ public class ProgrammesFragment extends ListFragment {
 
             @Override
             public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                if ((totalItemCount-firstVisibleItem < PREFETCH_LIMIT && visibleItemCount > 0) ||
+
+                if (firstVisibleItem > 30 && firstVisibleItem < firstVisibleItemCount) {
+                    //Toast.makeText(getActivity(),"Scroll to top button for 3 seconds", Toast.LENGTH_LONG).show();
+                    // view.smoothScrollToPosition(0);
+                    //view.fling(1000);
+                    scrollToTop.setVisibility(View.VISIBLE);
+                } else if (firstVisibleItem < 30) {
+                    scrollToTop.setVisibility(View.GONE);
+                }
+                else if (firstVisibleItem > firstVisibleItemCount )
+                {
+                    scrollToTop.setVisibility(View.GONE);
+                }
+
+                if ((totalItemCount - firstVisibleItem < PREFETCH_LIMIT && visibleItemCount > 0) ||
                         (firstVisibleItem + visibleItemCount == totalItemCount &&
-                        totalItemCount != 0) ||
+                                totalItemCount != 0) ||
                         (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount)) {
                     if (!loading) {
                         loading = true;
                         loadData(false);
                     }
                 }
+                firstVisibleItemCount = firstVisibleItem;
             }
         });
 
@@ -422,6 +455,8 @@ public class ProgrammesFragment extends ListFragment {
 
         mInstance.addToRequestQueue(channelListRequest);
     }
+
+
 
     private void onRefreshHandler() {
         if (programmeList.size() == 0) {
@@ -646,7 +681,8 @@ public class ProgrammesFragment extends ListFragment {
                         if (pDialog.isShowing())
                             pDialog.dismiss();
                         loading = false;
-                        if (error instanceof NetworkError || error instanceof TimeoutError) {
+                        if (getActivity() != null &&
+                                (error instanceof NetworkError || error instanceof TimeoutError)) {
                             ConnectionFailureFragment connectionFailureFragment = new
                                     ConnectionFailureFragment();
                             FragmentManager fragmentManager = getActivity().getSupportFragmentManager();

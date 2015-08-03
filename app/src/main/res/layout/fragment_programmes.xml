@@ -13,5 +13,20 @@
         android:dividerHeight="1dp"
         android:listSelector="@drawable/list_row_selector"
         android:animateLayoutChanges="true"/>
+    <TextView
+        android:layout_marginTop="10dp"
+        android:id="@+id/scrollToTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scroll to top"
+        android:clickable="true"
+        android:visibility="visible"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:background="@color/scroll_to_top_background"
+        android:textSize="15dp"
+        android:textColor="@color/scroll_to_top_text"
+        />
+
 
 </RelativeLayout>

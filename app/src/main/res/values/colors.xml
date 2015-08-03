@@ -11,5 +11,7 @@
     <color name="list_row_end_color">#ffffff</color>
     <color name="list_row_hover_start_color">#ebeef0</color>
     <color name="list_row_hover_end_color">#ebeef0</color>
+    <color name="scroll_to_top_background">#000000</color>
+    <color name="scroll_to_top_text">#FFFFFF</color>
 
 </resources>
