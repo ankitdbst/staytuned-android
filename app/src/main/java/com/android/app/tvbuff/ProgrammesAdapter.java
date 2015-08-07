@@ -42,11 +42,13 @@ public class ProgrammesAdapter extends BaseAdapter {
     Context context;
     ArrayList<Programme> programmeArrayList;
     SharedPreferences settingsPrefs;
+    String category;
 
-    public ProgrammesAdapter(Context context, ArrayList<Programme> programmes) {
+    public ProgrammesAdapter(Context context, ArrayList<Programme> programmes, String category) {
         this.context = context;
         this.programmeArrayList = programmes;
 
+        this.category = category;
         settingsPrefs = context
                 .getSharedPreferences(SettingsDialogFragment.SETTINGS_PREF_FILE, 0);
     }
@@ -160,8 +162,6 @@ public class ProgrammesAdapter extends BaseAdapter {
                                         fos = context.openFileOutput(programme.getId(),Context.MODE_PRIVATE);
                                         bitmap.compress(Bitmap.CompressFormat.PNG,100,fos);
                                         fos.close();
-                                    } catch (FileNotFoundException e) {
-                                        e.printStackTrace();
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -200,13 +200,17 @@ public class ProgrammesAdapter extends BaseAdapter {
         actors.setText("");
         directors.setText("");
 
-        // Queue IMDb query for fetching movie information
-        IMDbDetail imDbDetail = programme.getImDbDetail();
-        if (programme.isImDbNA()) {
-            rating.setText("N/A");
-            IMDb.queue(this, convertView, programme, curlSingleton);
+        if (category.equals("movies")) {
+            // Queue IMDb query for fetching movie information
+            IMDbDetail imDbDetail = programme.getImDbDetail();
+            if (programme.isImDbNA()) {
+                rating.setText("N/A");
+                IMDb.queue(this, convertView, programme, curlSingleton);
+            } else {
+                showIMDbInfo(imDbDetail, convertView);
+            }
         } else {
-            showIMDbInfo(imDbDetail, convertView);
+            rating.setVisibility(View.GONE);
         }
 
         // Return the completed view to render on screen

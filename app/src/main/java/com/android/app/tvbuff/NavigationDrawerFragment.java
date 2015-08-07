@@ -82,15 +82,11 @@ public class NavigationDrawerFragment extends Fragment {
         items = new ArrayList<>();
         displayItems = new ArrayList<>();
 
-        for (String language : ProgrammesFragment.programmeLanguages) {
-            for (String category : ProgrammesFragment.programmeCategories) {
-                Map<String, String> m = new HashMap<>();
-                String key = language + "_" + category;
-                m.put(ITEM_CATEGORY, category);
-                m.put(ITEM_LANGUAGE, language);
-                displayItems.add(getStringResourceByName("title_" + key));
-                items.add(m);
-            }
+        for (String category : ProgrammesFragment.programmeCategories) {
+            Map<String, String> m = new HashMap<>();
+            m.put(ITEM_CATEGORY, category);
+            displayItems.add(getStringResourceByName("title_" + category));
+            items.add(m);
         }
 
         // Read in the flag indicating whether or not the user has demonstrated awareness of the

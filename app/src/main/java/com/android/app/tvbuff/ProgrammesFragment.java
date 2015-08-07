@@ -34,10 +34,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.RetryPolicy;
 import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
@@ -50,6 +52,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
 
+import java.io.DataOutput;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -69,22 +72,30 @@ public class ProgrammesFragment extends ListFragment {
     public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
     public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
 
-    // Feed new programme categories here
+    // Programme categories
     public static final String programmeCategories[] = {
-        "movies",
-        "sports"
+            "movies",
+            "entertainment",
+            "sports",
+            "kids",
+            "lifestyle",
+            "music",
+            "news",
+            "documentary",
+            "religious"
     };
 
-    // Feed new programme languages here
+    // Programme languages
     public static final String programmeLanguages[] = {
-        "english",
-        "hindi"
+            "english",
+            "hindi"
     };
 
     // Configuration param names
     public static final String USER_ID = "userid";
     public static final String CHANNEL_LIST = "channellist";
     public static final String CHANNEL_LIST_GENRE_NAME = "genrename";
+    public static final String CHANNEL_SORT_FIELD = "sortfield";
     public static final String CHANNEL_LIST_LANGUAGE_NAME = "languagename";
     public static final String CHANNEL_LIST_FROM_DATE = "fromdatetime";
     public static final String CHANNEL_LIST_TO_DATE = "todatetime";
@@ -131,7 +142,8 @@ public class ProgrammesFragment extends ListFragment {
     /* Indicate data being fetched */
     private boolean loading = false;
     /* List of channels to retrieve programme listings from */
-    private List<String> channelList;
+    private List<String> channelList = new ArrayList<>();
+    private SharedPreferences channelListPref;
     /* Track the count of pages retrieved from the API */
     private int pageCount = 0;
     private int firstVisibleItemCount = 0;
@@ -184,40 +196,12 @@ public class ProgrammesFragment extends ListFragment {
         }
     }
 
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        // Showing progress dialog
-        pDialog = new ProgressDialog(getActivity());
-        pDialog.setMessage("Please wait...");
-        pDialog.setCancelable(false);
-        pDialog.show();
-
-        mInstance = CurlSingleton.getInstance(getActivity().getApplicationContext());
-
-        // Create a Programmes Adapter to retrieve the list of programmes
-        programmeList = new ArrayList<>();
-        adapter = new ProgrammesAdapter(getActivity(), programmeList);
-    }
-
-    private List<String> getChannelListFromPref() {
-        if (channelList == null) {
-            channelList = new ArrayList<>();
-        } else {
-            channelList.clear();
-        }
-
-        Map<String, ?> channelListMap = getActivity().getSharedPreferences(currentPrefKey, 0)
-                .getAll();
-        for (Map.Entry<String, ?> entry : channelListMap.entrySet()) {
+    private void getChannelListFromPref() {
+        for (Map.Entry<String, ?> entry : channelListPref.getAll().entrySet()) {
             if ((Boolean)entry.getValue()) {
                 channelList.add(entry.getKey());
             }
         }
-
-        return channelList;
     }
 
     @Override
@@ -319,10 +303,19 @@ public class ProgrammesFragment extends ListFragment {
         Bundle args = getArguments();
 
         currentCategory = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
-        currentLanguage = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
-        currentPrefKey = getActivity().getPackageName() + "." +
-                currentCategory + "_" + currentLanguage;
+        currentPrefKey = getActivity().getPackageName() + "." + currentCategory;
 
+        // Showing progress dialog
+        pDialog = new ProgressDialog(getActivity());
+        pDialog.setMessage("Please wait...");
+        pDialog.setCancelable(false);
+        pDialog.show();
+
+        mInstance = CurlSingleton.getInstance(getActivity().getApplicationContext());
+
+        // Create a Programmes Adapter to retrieve the list of programmes
+        programmeList = new ArrayList<>();
+        adapter = new ProgrammesAdapter(getActivity(), programmeList, currentCategory);
         // Local storage :: Retrieve channel listings prefs
         /** Shared Preference list file key for Channel Lists
          Pref file for each category
@@ -331,9 +324,7 @@ public class ProgrammesFragment extends ListFragment {
          2. Genre to filter
          3. Imdb rating to fetch YES/NO etc.
          */
-        final SharedPreferences channelListPref = getActivity()
-                .getSharedPreferences(currentPrefKey, 0);
-        final SharedPreferences.Editor editor = channelListPref.edit();
+        channelListPref = getActivity().getSharedPreferences(currentPrefKey, 0);
 
         final ListView listView = getListView();
 
@@ -362,9 +353,7 @@ public class ProgrammesFragment extends ListFragment {
                     scrollToTop.setVisibility(View.VISIBLE);
                 } else if (firstVisibleItem < 30) {
                     scrollToTop.setVisibility(View.GONE);
-                }
-                else if (firstVisibleItem > firstVisibleItemCount )
-                {
+                } else if (firstVisibleItem > firstVisibleItemCount) {
                     scrollToTop.setVisibility(View.GONE);
                 }
 
@@ -381,25 +370,28 @@ public class ProgrammesFragment extends ListFragment {
             }
         });
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        // No detail view for other categories?!
+        if (currentCategory.equals("movies")) {
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Programme programme = programmeList.get(position);
-                Boolean programmeCollapsed = programme.getCollapsed();
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Programme programme = programmeList.get(position);
+                    Boolean programmeCollapsed = programme.getCollapsed();
 
-                RelativeLayout imdbDetailView = (RelativeLayout) view.findViewById(R.id.imdb_detail);
+                    RelativeLayout imdbDetailView = (RelativeLayout) view.findViewById(R.id.imdb_detail);
 
-                if (programmeCollapsed) {
-                    imdbDetailView.setVisibility(View.VISIBLE);
-                } else {
-                    imdbDetailView.setVisibility(View.GONE);
+                    if (programmeCollapsed) {
+                        imdbDetailView.setVisibility(View.VISIBLE);
+                    } else {
+                        imdbDetailView.setVisibility(View.GONE);
+                    }
+                    programme.setCollapsed(!programmeCollapsed);
                 }
-                programme.setCollapsed(!programmeCollapsed);
-            }
-        });
+            });
+        }
 
-        setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener(){
+        setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
 
             @Override
             public void onRefresh() {
@@ -410,20 +402,26 @@ public class ProgrammesFragment extends ListFragment {
         // Bind to our new adapter.
         setListAdapter(adapter);
 
-        // Always load channel listing from the prefs, if present
-        channelList = getChannelListFromPref();
-        if (channelList.size() > 0) {
+        if (channelListPref.getAll().size() > 0) {
+            getChannelListFromPref();
+            // Always load channel listing from the prefs, if present
+            if (channelList.size() == 0) {
+                Toast.makeText(getActivity(), R.string.channel_list_empty ,
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
             loadData(false);
             return;
         }
 
+        // Retrieve channel listings fresh
         String url = new Uri.Builder()
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
                 .path(CHANNEL_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
                 .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, currentCategory)
-                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, currentLanguage)
+                .appendQueryParameter(CHANNEL_SORT_FIELD, "channelrank")
                 .build()
                 .toString();
 
@@ -431,6 +429,7 @@ public class ProgrammesFragment extends ListFragment {
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        SharedPreferences.Editor editor = channelListPref.edit();
                         StringTokenizer tokenizer = new StringTokenizer(response, ",");
                         while (tokenizer.hasMoreTokens()) {
                             String token = tokenizer.nextToken();
@@ -455,8 +454,6 @@ public class ProgrammesFragment extends ListFragment {
 
         mInstance.addToRequestQueue(channelListRequest);
     }
-
-
 
     private void onRefreshHandler() {
         if (programmeList.size() == 0) {
@@ -566,7 +563,8 @@ public class ProgrammesFragment extends ListFragment {
         if (reset) {
             calendar = Calendar.getInstance();
             // Fetch current channel list
-            channelList = getChannelListFromPref();
+            channelList.clear();
+            getChannelListFromPref();
             // Reset adapter
             programmeList.clear();
             programmeMap.clear();
@@ -649,7 +647,10 @@ public class ProgrammesFragment extends ListFragment {
                                     p.setSubscribed(getActivity()
                                             .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0)
                                             .contains(programmeId));
-                                    IMDb.queue(adapter, null, p, mInstance);
+                                    // Retrieve IMDb for movies only
+                                    if (currentCategory.equals("movies")) {
+                                        IMDb.queue(adapter, null, p, mInstance);
+                                    }
                                     list.add(p);
                                 }
                             }
@@ -696,6 +697,10 @@ public class ProgrammesFragment extends ListFragment {
                     }
                 });
 
+        int socketTimeout = 30000;//30 seconds - change to what you want
+        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+        jsObjRequest.setRetryPolicy(policy);
         mInstance.addToRequestQueue(jsObjRequest);
     }
 
@@ -717,7 +722,6 @@ public class ProgrammesFragment extends ListFragment {
 
             Bundle args = new Bundle();
             args.putString(NavigationDrawerFragment.ITEM_CATEGORY, currentCategory);
-            args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, currentLanguage);
 
             fragment.setArguments(args);
             fragment.show(getActivity().getSupportFragmentManager(), "FiltersDialogFragment");
