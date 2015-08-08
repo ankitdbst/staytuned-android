@@ -109,7 +109,6 @@ public class FiltersDialogFragment extends DialogFragment {
                         }
 
                         editor.apply();
-                        Toast.makeText(getActivity(), "Filters saved", Toast.LENGTH_SHORT).show();
                         mListener.onDialogPositiveClick(FiltersDialogFragment.this);
                     }
                 })

@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
@@ -52,11 +53,16 @@ public class MainActivity extends ActionBarActivity
     private CharSequence mTitle;
     private ProgrammesFragment programmesFragment;
 
+    private static long getFragmentId(String category, int position) {
+        int idx = Arrays.asList(ProgrammesFragment.programmeCategories).indexOf(category)+1;
+        return idx*10 + position;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        final ActionBar actionBar = getSupportActionBar();
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
@@ -68,11 +74,10 @@ public class MainActivity extends ActionBarActivity
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
 
         mViewPager.setOnPageChangeListener(
                 new ViewPager.SimpleOnPageChangeListener() {
@@ -83,16 +88,7 @@ public class MainActivity extends ActionBarActivity
                         getSupportActionBar().setSelectedNavigationItem(position);
                     }
                 });
-    }
 
-    @Override
-    public void onNavigationDrawerItemSelected(Map<String, String> item) {
-        mCategory = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
-    }
-
-    public void restoreActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
         // Create a tab listener that is called when the user changes tabs.
         ActionBar.TabListener tabListener = new ActionBar.TabListener() {
@@ -109,14 +105,25 @@ public class MainActivity extends ActionBarActivity
                 // probably ignore this event
             }
         };
-        // Add 3 tabs, specifying the tab's text and TabListener
-        for (int i = 0; i < 2; i++) {
-            actionBar.addTab(
-                    actionBar.newTab()
-                            .setText("Tab " + (i + 1))
-                            .setTabListener(tabListener));
+
+        for (String language : ProgrammesFragment.programmeLanguages) {
+            actionBar.addTab(actionBar.newTab().setText(language).setTabListener(tabListener));
         }
 
+        mNavigationDrawerFragment.updateDrawerCallback(this);
+    }
+
+    @Override
+    public void onNavigationDrawerItemSelected(Map<String, String> item) {
+        mCategory = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
+        if (mViewPager != null) {
+            mViewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
+        }
+    }
+
+    public void restoreActionBar() {
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
     }
@@ -141,7 +148,13 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
-        programmesFragment.loadData(true);
+        int position = getSupportActionBar().getSelectedNavigationIndex();
+
+        String fragmentName = "android:switcher:" + R.id.pager + ":" +
+                MainActivity.getFragmentId(mCategory, position);
+        ProgrammesFragment fragment =
+                (ProgrammesFragment) getSupportFragmentManager().findFragmentByTag(fragmentName);
+        fragment.loadData(true);
     }
 
     @Override
@@ -164,13 +177,13 @@ public class MainActivity extends ActionBarActivity
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
 
-            programmesFragment = new ProgrammesFragment();
+            return ProgrammesFragment.newInstance(mCategory,
+                    ProgrammesFragment.programmeLanguages[position]);
+        }
 
-            Bundle args = new Bundle();
-            args.putString(NavigationDrawerFragment.ITEM_CATEGORY, mCategory);
-
-            programmesFragment.setArguments(args);
-            return programmesFragment;
+        @Override
+        public long getItemId(int position) {
+            return MainActivity.getFragmentId(mCategory, position);
         }
 
         @Override

@@ -8,28 +8,21 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
-import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.text.Html;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,7 +33,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
-import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -50,16 +42,13 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.io.DataOutput;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -149,9 +138,9 @@ public class ProgrammesFragment extends ListFragment {
     private int firstVisibleItemCount = 0;
 
     /* Category with which the fragment is instantiated */
-    private String currentCategory;
+    private String mCategory;
     /* Language with which the fragment is instantiated */
-    private String currentLanguage;
+    private String mLanguage;
     /* Pref key for current selection */
     private String currentPrefKey;
 
@@ -194,6 +183,21 @@ public class ProgrammesFragment extends ListFragment {
         public ImageLoader getImageLoader() {
             return mImageLoader;
         }
+    }
+
+    /**
+     * Returns a new instance of this fragment for the given section
+     * number.
+     */
+    public static ProgrammesFragment newInstance(String category, String language) {
+        ProgrammesFragment fragment = new ProgrammesFragment();
+        Bundle args = new Bundle();
+
+        args.putString(NavigationDrawerFragment.ITEM_CATEGORY, category);
+        args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, language);
+
+        fragment.setArguments(args);
+        return fragment;
     }
 
     private void getChannelListFromPref() {
@@ -302,8 +306,10 @@ public class ProgrammesFragment extends ListFragment {
 
         Bundle args = getArguments();
 
-        currentCategory = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
-        currentPrefKey = getActivity().getPackageName() + "." + currentCategory;
+        mCategory = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
+        mLanguage = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
+
+        currentPrefKey = getActivity().getPackageName() + "." + mCategory + "_" + mLanguage;
 
         // Showing progress dialog
         pDialog = new ProgressDialog(getActivity());
@@ -315,7 +321,7 @@ public class ProgrammesFragment extends ListFragment {
 
         // Create a Programmes Adapter to retrieve the list of programmes
         programmeList = new ArrayList<>();
-        adapter = new ProgrammesAdapter(getActivity(), programmeList, currentCategory);
+        adapter = new ProgrammesAdapter(getActivity(), programmeList, mCategory);
         // Local storage :: Retrieve channel listings prefs
         /** Shared Preference list file key for Channel Lists
          Pref file for each category
@@ -371,7 +377,7 @@ public class ProgrammesFragment extends ListFragment {
         });
 
         // No detail view for other categories?!
-        if (currentCategory.equals("movies")) {
+        if (mCategory.equals("movies")) {
             listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
                 @Override
@@ -420,7 +426,8 @@ public class ProgrammesFragment extends ListFragment {
                 .authority(DATA_SOURCE_URL)
                 .path(CHANNEL_LIST_PATH)
                 .appendQueryParameter(USER_ID, "0")
-                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, currentCategory)
+                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, mCategory)
+                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, mLanguage)
                 .appendQueryParameter(CHANNEL_SORT_FIELD, "channelrank")
                 .build()
                 .toString();
@@ -648,7 +655,7 @@ public class ProgrammesFragment extends ListFragment {
                                             .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0)
                                             .contains(programmeId));
                                     // Retrieve IMDb for movies only
-                                    if (currentCategory.equals("movies")) {
+                                    if (mCategory.equals("movies")) {
                                         IMDb.queue(adapter, null, p, mInstance);
                                     }
                                     list.add(p);
@@ -682,22 +689,15 @@ public class ProgrammesFragment extends ListFragment {
                         if (pDialog.isShowing())
                             pDialog.dismiss();
                         loading = false;
-                        if (getActivity() != null &&
-                                (error instanceof NetworkError || error instanceof TimeoutError)) {
-                            ConnectionFailureFragment connectionFailureFragment = new
-                                    ConnectionFailureFragment();
-                            FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
-                            fragmentManager.beginTransaction()
-                                    .replace(R.id.container, connectionFailureFragment)
-                                    .commit();
-
+                        Log.v(TAG, "Failed to load data: " + error.getLocalizedMessage());
+                        if (getActivity() != null && error instanceof NetworkError) {
                             Toast.makeText(getActivity(), R.string.connection_failure,
                                     Toast.LENGTH_LONG).show();
                         }
                     }
                 });
 
-        int socketTimeout = 30000;//30 seconds - change to what you want
+        int socketTimeout = 5000;
         RetryPolicy policy = new DefaultRetryPolicy(socketTimeout,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
         jsObjRequest.setRetryPolicy(policy);
@@ -721,7 +721,8 @@ public class ProgrammesFragment extends ListFragment {
             DialogFragment fragment = new FiltersDialogFragment();
 
             Bundle args = new Bundle();
-            args.putString(NavigationDrawerFragment.ITEM_CATEGORY, currentCategory);
+            args.putString(NavigationDrawerFragment.ITEM_CATEGORY, mCategory);
+            args.putString(NavigationDrawerFragment.ITEM_LANGUAGE, mLanguage);
 
             fragment.setArguments(args);
             fragment.show(getActivity().getSupportFragmentManager(), "FiltersDialogFragment");

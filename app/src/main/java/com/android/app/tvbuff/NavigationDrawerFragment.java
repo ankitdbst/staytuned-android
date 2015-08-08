@@ -236,6 +236,10 @@ public class NavigationDrawerFragment extends Fragment {
         }
     }
 
+    public void updateDrawerCallback(Activity activity) {
+        mCallbacks = (NavigationDrawerCallbacks) activity;
+    }
+
     @Override
     public void onDetach() {
         super.onDetach();

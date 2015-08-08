@@ -60,7 +60,10 @@ public class ProgrammesAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
-        return programmeArrayList.get(position);
+        if (programmeArrayList.size() > 0) {
+            return programmeArrayList.get(position);
+        }
+        return null;
     }
 
     @Override
