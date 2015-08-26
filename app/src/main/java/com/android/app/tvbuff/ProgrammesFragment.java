@@ -35,7 +35,9 @@ import com.android.volley.Response;
 import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -57,9 +59,12 @@ import java.util.StringTokenizer;
 
 public class ProgrammesFragment extends ListFragment {
 
-    public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
-    public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
-    public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
+    //public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
+    public static final String DATA_SOURCE_URL = "stay-tunedapp.rhcloud.com";
+    //public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
+    public static final String CHANNEL_LIST_PATH = "/api/channels";
+    //public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
+    public static final String SCHEDULE_LIST_PATH = "/api/listings";
 
     // Programme categories
     public static final String programmeCategories[] = {
@@ -82,21 +87,26 @@ public class ProgrammesFragment extends ListFragment {
 
     // Configuration param names
     public static final String USER_ID = "userid";
-    public static final String CHANNEL_LIST = "channellist";
-    public static final String CHANNEL_LIST_GENRE_NAME = "genrename";
+    //public static final String CHANNEL_LIST = "channellist";
+    public static final String CHANNEL_LIST = "channels";
+    //public static final String CHANNEL_LIST_GENRE_NAME = "genrename";
+    public static final String CHANNEL_LIST_GENRE_NAME = "category";
     public static final String CHANNEL_SORT_FIELD = "sortfield";
-    public static final String CHANNEL_LIST_LANGUAGE_NAME = "languagename";
-    public static final String CHANNEL_LIST_FROM_DATE = "fromdatetime";
-    public static final String CHANNEL_LIST_TO_DATE = "todatetime";
+    //public static final String CHANNEL_LIST_LANGUAGE_NAME = "languagename";
+    public static final String CHANNEL_LIST_LANGUAGE_NAME = "language";
+    public static final String CHANNEL_LIST_FROM_DATE = "startime";
+    //public static final String CHANNEL_LIST_FROM_DATE = "fromdatetime";
+    public static final String CHANNEL_LIST_TO_DATE = "stoptime";
+    //public static final String CHANNEL_LIST_TO_DATE = "todatetime";
 
     // Logging tag
     public static final String TAG = "ProgrammeFragment";
 
     public static final String TAG_SCHEDULE = "ScheduleGrid";
     public static final String TAG_CHANNEL = "channel";
-    public static final String TAG_CHANNEL_NAME = "channeldisplayname";
+    public static final String TAG_CHANNEL_NAME = "channel_name";
     public static final String TAG_PROGRAMME = "programme";
-    public static final String TAG_PROGRAMME_ID = "programmeid";
+    public static final String TAG_PROGRAMME_ID = "_id";
     public static final String TAG_PROGRAMME_TITLE = "title";
     public static final String TAG_PROGRAMME_IMAGE_URL = "programmeurl";
     public static final String TAG_PROGRAMME_GENRE = "subgenre";
@@ -296,12 +306,20 @@ public class ProgrammesFragment extends ListFragment {
     @Override
     public void onStart() {
         super.onStart();
-        loadData(true);
+        onRefreshHandler();
+        //loadData(true);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // test
     }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
         setHasOptionsMenu(true);
 
         Bundle args = getArguments();
@@ -425,23 +443,27 @@ public class ProgrammesFragment extends ListFragment {
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
                 .path(CHANNEL_LIST_PATH)
-                .appendQueryParameter(USER_ID, "0")
                 .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, mCategory)
                 .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, mLanguage)
-                .appendQueryParameter(CHANNEL_SORT_FIELD, "channelrank")
                 .build()
                 .toString();
 
-        StringRequest channelListRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
+
+        JsonRequest channelListRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
                     @Override
-                    public void onResponse(String response) {
+                    public void onResponse(JSONArray response) {
                         SharedPreferences.Editor editor = channelListPref.edit();
-                        StringTokenizer tokenizer = new StringTokenizer(response, ",");
-                        while (tokenizer.hasMoreTokens()) {
-                            String token = tokenizer.nextToken();
-                            channelList.add(token);
-                            editor.putBoolean(token, true);
+                        for (int i = 0; i < response.length(); ++i) {
+                            try {
+                                JSONObject channelObj = (JSONObject) response.get(i);
+                                String channelName = channelObj.getString("name");
+                                channelList.add(channelName);
+                                editor.putBoolean(channelName, true);
+                            } catch (JSONException e) {
+                                Log.d(TAG, e.getMessage());
+                                //e.printStackTrace();
+                            }
                         }
                         // commit changes async
                         editor.apply();
@@ -599,67 +621,57 @@ public class ProgrammesFragment extends ListFragment {
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
                 .path(SCHEDULE_LIST_PATH)
-                .appendQueryParameter(USER_ID, "0")
                 .appendQueryParameter(CHANNEL_LIST, channelListStr.toString())
                 .appendQueryParameter(CHANNEL_LIST_FROM_DATE, fromDate)
                 .appendQueryParameter(CHANNEL_LIST_TO_DATE, toDate)
                 .build()
                 .toString();
 
-        JsonObjectRequest jsObjRequest = new JsonObjectRequest
-                (Request.Method.GET, url, null,  new Response.Listener<JSONObject>() {
+        JsonRequest jsObjRequest = new JsonArrayRequest
+                (Request.Method.GET, url, null,  new Response.Listener<JSONArray>() {
 
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(JSONArray programmes) {
                         try {
-                            JSONArray channels = response.getJSONObject(TAG_SCHEDULE).
-                                    getJSONArray(TAG_CHANNEL);
-
                             ArrayList<Programme> list =
                                     new ArrayList<Programme>();
 
-                            for (int i = 0; i < channels.length(); ++i) {
-                                JSONObject channelObj = channels.getJSONObject(i);
-                                JSONArray programmes = channelObj.getJSONArray(TAG_PROGRAMME);
-
-                                String channelName = Html.fromHtml(channelObj
+                            for (int j = 0; j < programmes.length(); ++j) {
+                                JSONObject programmeObj = programmes.getJSONObject(j);
+                                String channelName = Html.fromHtml(programmeObj
                                         .getString(TAG_CHANNEL_NAME)).toString();
-
-                                for (int j = 0; j < programmes.length(); ++j) {
-                                    JSONObject programmeObj = programmes.getJSONObject(j);
-                                    String programmeId = programmeObj.getString(TAG_PROGRAMME_ID);
-                                    if (programmeMap.containsKey(programmeId)) {
-                                        continue;
-                                    }
-                                    // Add currently added item to map, to filter these in the next
-                                    // iteration, if running.
-                                    programmeMap.put(programmeId, true);
-
-                                    String title =
-                                            Html.fromHtml(programmeObj
-                                                    .getString(TAG_PROGRAMME_TITLE)).toString();
-                                    title = Html.fromHtml(title).toString();
-
-                                    Programme p = new Programme();
-                                    //Log.v(TAG,"id: "+programmeId+" title: "+title);
-                                    p.setId(programmeId);
-                                    p.setTitle(title);
-                                    p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
-                                    p.setStop(programmeObj.getString(TAG_PROGRAMME_STOP));
-                                    p.setDuration(programmeObj.getInt(TAG_PROGRAMME_DURATION));
-                                    p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
-                                    p.setThumbnailUrl(programmeObj.
-                                            getString(TAG_PROGRAMME_IMAGE_URL));
-                                    p.setChannelName(channelName);
-                                    p.setSubscribed(getActivity()
-                                            .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0)
-                                            .contains(programmeId));
-                                    // Retrieve IMDb for movies only
-                                    if (mCategory.equals("movies")) {
-                                        IMDb.queue(adapter, null, p, mInstance);
-                                    }
-                                    list.add(p);
+                                String programmeId = programmeObj.getString(TAG_PROGRAMME_ID);
+                                if (programmeMap.containsKey(programmeId)) {
+                                    continue;
                                 }
+                                // Add currently added item to map, to filter these in the next
+                                // iteration, if running.
+                                programmeMap.put(programmeId, true);
+
+                                String title =
+                                        Html.fromHtml(programmeObj
+                                                .getString(TAG_PROGRAMME_TITLE)).toString();
+                                title = Html.fromHtml(title).toString();
+
+                                Programme p = new Programme();
+                                //Log.v(TAG,"id: "+programmeId+" title: "+title);
+                                p.setId(programmeId);
+                                p.setTitle(title);
+                                p.setStart(programmeObj.getString(TAG_PROGRAMME_START));
+                                p.setStop(programmeObj.getString(TAG_PROGRAMME_STOP));
+                                p.setDuration(programmeObj.getInt(TAG_PROGRAMME_DURATION));
+                                p.setGenre(programmeObj.getString(TAG_PROGRAMME_GENRE));
+                                p.setThumbnailUrl(programmeObj.
+                                        getString(TAG_PROGRAMME_IMAGE_URL));
+                                p.setChannelName(channelName);
+                                p.setSubscribed(getActivity()
+                                        .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0)
+                                        .contains(programmeId));
+                                // Retrieve IMDb for movies only
+                                if (mCategory.equals("movies")) {
+                                    IMDb.queue(adapter, null, p, mInstance);
+                                }
+                                list.add(p);
                             }
 
                             pageCount++;
