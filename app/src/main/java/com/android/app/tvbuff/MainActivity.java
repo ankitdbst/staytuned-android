@@ -2,6 +2,7 @@ package com.android.app.tvbuff;
 
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
@@ -10,6 +11,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,13 +20,17 @@ import android.support.v4.widget.DrawerLayout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 
-public class MainActivity extends ActionBarActivity
+public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, FiltersDialogFragment.FiltersDialogListener {
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -34,6 +41,10 @@ public class MainActivity extends ActionBarActivity
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
     SectionsPagerAdapter mSectionsPagerAdapter;
+    SectionsPagerAdapter mMoviesSectionsPagerAdapter;
+    SectionsPagerAdapter mEntertainmentSectionsPagerAdapter;
+    private ListView mDrawerList;
+
 
     String mCategory;
 
@@ -51,7 +62,10 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
-    private ProgrammesFragment programmesFragment;
+    private ProgrammesFragment[][] programmesFragment =
+            new ProgrammesFragment[ProgrammesFragment.programmeCategories.length][ProgrammesFragment.programmeLanguages.length];
+
+    ArrayList<Integer>isSateSaved;
 
     private static long getFragmentId(String category, int position) {
         int idx = Arrays.asList(ProgrammesFragment.programmeCategories).indexOf(category)+1;
@@ -62,7 +76,12 @@ public class MainActivity extends ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         final ActionBar actionBar = getSupportActionBar();
+        String list[] = {"English","Hindi"};
+       // mDrawerList = (ListView) findViewById(R.id.navigation_drawer);
+       // mDrawerList.setAdapter(new ArrayAdapter<String>(this,R.layout.drawer_list_item, list));
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
@@ -77,7 +96,8 @@ public class MainActivity extends ActionBarActivity
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mViewPager.setAdapter(mSectionsPagerAdapter);
 
         mViewPager.setOnPageChangeListener(
                 new ViewPager.SimpleOnPageChangeListener() {
@@ -107,17 +127,37 @@ public class MainActivity extends ActionBarActivity
         };
 
         for (String language : ProgrammesFragment.programmeLanguages) {
-            actionBar.addTab(actionBar.newTab().setText(language).setTabListener(tabListener));
+            toolbar.addTab(actionBar.newTab().setText(language).setTabListener(tabListener));
         }
 
-        mNavigationDrawerFragment.updateDrawerCallback(this);
+//        mNavigationDrawerFragment.updateDrawerCallback(this);
     }
 
     @Override
     public void onNavigationDrawerItemSelected(Map<String, String> item) {
+        //mSectionsPagerAdapter = null;
         mCategory = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
         if (mViewPager != null) {
-            mViewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
+            switch (mCategory)
+            {
+                case "movies":
+                    if(mMoviesSectionsPagerAdapter == null)
+                    {
+                        mMoviesSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+                    }
+                    mViewPager.setAdapter(mMoviesSectionsPagerAdapter);
+                    break;
+                case "entertainment":
+                    if(mEntertainmentSectionsPagerAdapter == null)
+                    {
+                        mEntertainmentSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+                    }
+                    mViewPager.setAdapter(mEntertainmentSectionsPagerAdapter);
+                    break;
+            }
+            mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+            //mSectionsPagerAdapter.createNewFragmentsForDifferentCategory();
+            mViewPager.setAdapter(mSectionsPagerAdapter);
         }
     }
 
@@ -172,19 +212,47 @@ public class MainActivity extends ActionBarActivity
             super(fm);
         }
 
+        ViewGroup mContainer;
+//
+//        @Override
+//        public Object instantiateItem(ViewGroup container, int position) {
+//            mContainer = container;
+//            return super.instantiateItem(container, position);
+//        }
+
+        public void createNewFragmentsForDifferentCategory()
+        {
+                instantiateItem(mContainer,0);
+                instantiateItem(mContainer,1);
+        }
+
         @Override
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-
+//            int categoryIndex = position/2;
+//            position = position%2;
+//
+//            if (programmesFragment[categoryIndex][position] == null) {
+//                programmesFragment[categoryIndex][position] = ProgrammesFragment.newInstance(mCategory,
+//                        ProgrammesFragment.programmeLanguages[position]);
+//            }
+//            return programmesFragment[categoryIndex][position];
             return ProgrammesFragment.newInstance(mCategory,
-                    ProgrammesFragment.programmeLanguages[position]);
+                        ProgrammesFragment.programmeLanguages[position]);
         }
 
         @Override
         public long getItemId(int position) {
             return MainActivity.getFragmentId(mCategory, position);
+            //return position;
         }
+
+
+//        @Override
+//        public Object instantiateItem(ViewGroup container, int position) {
+//            return super.instantiateItem(container, (int)getFragmentId(mCategory,position));
+//        }
 
         @Override
         public int getCount() {

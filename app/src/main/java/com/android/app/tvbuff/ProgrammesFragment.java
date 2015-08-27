@@ -72,7 +72,7 @@ public class ProgrammesFragment extends ListFragment {
             "entertainment",
             "sports",
             "kids",
-            "lifestyle",
+            "food & lifestyle",
             "music",
             "news",
             "documentary",

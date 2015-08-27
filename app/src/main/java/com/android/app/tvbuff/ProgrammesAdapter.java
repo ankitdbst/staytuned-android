@@ -123,7 +123,8 @@ public class ProgrammesAdapter extends BaseAdapter {
                 int position = (Integer) v.getTag();
                 final Bitmap imageNotification;
                 final Programme programme = (Programme) getItem(position);
-                Long itemIdLong = Long.parseLong(programme.getId());
+                String id = programme.getId();
+                Long itemIdLong = Long.parseLong(id.substring(0,id.indexOf(':')));
                 //TODO move it out of on click listener
                 final SharedPreferences notificationSubscribed = context
                         .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0);

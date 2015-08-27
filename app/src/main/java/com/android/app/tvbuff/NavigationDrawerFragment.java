@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -85,7 +86,7 @@ public class NavigationDrawerFragment extends Fragment {
         for (String category : ProgrammesFragment.programmeCategories) {
             Map<String, String> m = new HashMap<>();
             m.put(ITEM_CATEGORY, category);
-            displayItems.add(getStringResourceByName("title_" + category));
+            displayItems.add(getStringResourceByName("title_" + category.split(" ")[0]));
             items.add(m);
         }
 
@@ -129,7 +130,7 @@ public class NavigationDrawerFragment extends Fragment {
         });
 
         mDrawerListView.setAdapter(new ArrayAdapter<>(
-                getActionBar().getThemedContext(),
+                getActivity().getBaseContext(),
                 android.R.layout.simple_list_item_activated_1,
                 displayItems));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
@@ -282,12 +283,12 @@ public class NavigationDrawerFragment extends Fragment {
     private void showGlobalContextActionBar() {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         actionBar.setTitle(R.string.app_name);
     }
 
     private ActionBar getActionBar() {
-        return ((ActionBarActivity) getActivity()).getSupportActionBar();
+        return ((AppCompatActivity) getActivity()).getSupportActionBar();
     }
 
     /**
