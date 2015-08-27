@@ -203,18 +203,12 @@ public class ProgrammesAdapter extends BaseAdapter {
         actors.setText("");
         directors.setText("");
 
-        if (category.equals("movies")) {
-            // Queue IMDb query for fetching movie information
-            IMDbDetail imDbDetail = programme.getImDbDetail();
-            if (programme.isImDbNA()) {
-                rating.setText("N/A");
-                IMDb.queue(this, convertView, programme, curlSingleton);
-            } else {
-                showIMDbInfo(imDbDetail, convertView);
-            }
+        if (programme.getImdb() != null) {
+            showIMDbInfo(programme.getImdb(), convertView);
         } else {
             rating.setVisibility(View.GONE);
         }
+
 
         // Return the completed view to render on screen
         return convertView;
@@ -277,21 +271,19 @@ public class ProgrammesAdapter extends BaseAdapter {
         //Log.v(TAG, "cancelled");
     }
 
-    public void showIMDbInfo(IMDbDetail iMdbDetail, View convertView) {
-        if (iMdbDetail != null && convertView.getVisibility() == View.VISIBLE) {
-            TextView rating = (TextView) convertView.findViewById(R.id.rating);
-            TextView plot = (TextView) convertView.findViewById(R.id.plot);
-            TextView actors = (TextView) convertView.findViewById(R.id.actors);
-            TextView directors = (TextView) convertView.findViewById(R.id.directors);
-            TextView title = (TextView) convertView.findViewById(R.id.title);
+    public void showIMDbInfo(IMDb imdb, View convertView) {
+        TextView rating = (TextView) convertView.findViewById(R.id.rating);
+        TextView plot = (TextView) convertView.findViewById(R.id.plot);
+        TextView actors = (TextView) convertView.findViewById(R.id.actors);
+        TextView directors = (TextView) convertView.findViewById(R.id.directors);
+        TextView title = (TextView) convertView.findViewById(R.id.title);
 
-            rating.setText(iMdbDetail.getRating());
-            plot.setText(iMdbDetail.getPlot());
-            actors.setText(iMdbDetail.getActors());
-            directors.setText(iMdbDetail.getDirectors());
+        rating.setText(imdb.rating);
+        plot.setText(imdb.plot);
+        actors.setText(imdb.actors);
+        directors.setText(imdb.director);
 
-            title.setText(Html.fromHtml("<strong>" + title.getText() + "</strong>" +
-                    " <small>" + iMdbDetail.getYear() + "</small>"));
-        }
+        title.setText(Html.fromHtml("<strong>" + title.getText() + "</strong>" +
+                " <small>" + imdb.year + "</small>"));
     }
 }
