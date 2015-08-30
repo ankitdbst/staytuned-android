@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,7 +28,8 @@ public class PhoneBootReceiver extends BroadcastReceiver {
         Log.v("bootrestart","reading preferences");
         final SharedPreferences notificationSubscribed = context.getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0);
         JSONObject programmejson;
-        long stoptime=0;
+        JSONArray reminderInterval = new JSONArray();
+        long stoptime = 0, starttime = 0, reminderIntervalLong = 0;
         final Map<String,?> storedData = notificationSubscribed.getAll();
         long currTime = System.currentTimeMillis();
         for(String key:storedData.keySet())
@@ -39,6 +41,9 @@ public class PhoneBootReceiver extends BroadcastReceiver {
             try {
                 programmejson = new JSONObject(storedData.get(key).toString());
                 stoptime = programmejson.getLong("stoptime");
+                starttime = programmejson.getLong("starttime");
+                reminderInterval = programmejson.getJSONArray("remindertimearray");
+                reminderIntervalLong = reminderInterval.getLong(0);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -54,7 +59,7 @@ public class PhoneBootReceiver extends BroadcastReceiver {
                 int currentTime = (int) System.currentTimeMillis();
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(context, (int)id, notificationIntent,PendingIntent.FLAG_UPDATE_CURRENT);
                 AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-                alarmManager.set(AlarmManager.RTC,currentTime+10*1000, pendingIntent);
+                alarmManager.set(AlarmManager.RTC, starttime - reminderIntervalLong, pendingIntent);
             }
         }
 

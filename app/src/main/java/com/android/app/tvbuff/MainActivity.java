@@ -34,7 +34,7 @@ public class MainActivity extends ActionBarActivity
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
     SectionsPagerAdapter mSectionsPagerAdapter;
-
+    //TODO Cleanup and remove notification image stored in internal storage also. Clubbing id and starttime by removing : for long.parse operations
     String mCategory;
 
     /**

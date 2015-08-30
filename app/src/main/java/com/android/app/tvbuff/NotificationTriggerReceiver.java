@@ -35,7 +35,7 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         Intent notificationIntent = new Intent(context, MainActivity.class);
         JSONObject programmejson;
         String title="",channel="";
-        long starttime,stoptime;
+        long starttime = 0,stoptime;
         FileInputStream fis;
         Bitmap notificationImage = null;
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
@@ -82,12 +82,25 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         }
         builder.setContentTitle(title);
         builder.setContentText("On "+channel);
-        builder.setSubText("In 15 minutes");
+        int timeSubtext = getTimeForSubtext(starttime);
+        if(timeSubtext >= 0)
+            builder.setSubText("In "+getTimeForSubtext(starttime)+" minutes");
+        else
+        {
+            builder.setSubText("Running since "+getTimeForSubtext(starttime)+" minutes");
+        }
 
         //Send the notification. This will immediately display the notification icon in the
         //         notification bar.
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify((int) intent.getLongExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID,0), builder.build());
+    }
+
+    private int getTimeForSubtext(long starttime)
+    {
+        long currtime = System.currentTimeMillis();
+        long difference = starttime - currtime;
+        return (int)difference/60000;
     }
 }

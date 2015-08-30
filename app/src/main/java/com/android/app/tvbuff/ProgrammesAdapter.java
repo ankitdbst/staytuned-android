@@ -24,6 +24,7 @@ import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.NetworkImageView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Text;
@@ -139,12 +140,17 @@ public class ProgrammesAdapter extends BaseAdapter {
                 } else {
                     //add to subscription pref data.
                     //add json string in SharedPref
+                    Long reminderInterval = settingsPrefs.getLong(SettingsDialogFragment.REMINDER_INTERVAL,
+                            15*60*1000);
+                    long reminderArray[] = {reminderInterval};
                     JSONObject programmejson = new JSONObject();
                     try {
+                        JSONArray reminderIntervalArray = new JSONArray(reminderInterval);
                         programmejson.put("title",programme.getTitle());
                         programmejson.put("starttime",programme.getStart().getTime());
                         programmejson.put("stoptime",programme.getStop().getTime());
                         programmejson.put("channel",programme.getChannelName());
+                        programmejson.put("remindertimearray",reminderIntervalArray);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -178,9 +184,8 @@ public class ProgrammesAdapter extends BaseAdapter {
                                 }
                             });
                     curlSingleton.addToRequestQueue(imageRequest);
-
+                    scheduleNotification(view, itemIdLong, programmejson);
                     Toast.makeText(context, "Reminder set", Toast.LENGTH_SHORT).show();
-                    scheduleNotification(view, itemIdLong,programmejson);
                 }
                 programme.setSubscribed(!programme.getSubscribed());
                 notifyDataSetChanged();
@@ -193,6 +198,9 @@ public class ProgrammesAdapter extends BaseAdapter {
         channelName.setText(programme.getChannelName());
         startTime.setText(getFriendlyDateTime(programme.getStart()));
         duration.setText(Integer.toString(programme.getDuration()) + " min");
+        if(isProgrammeRunning(programme.getStart())) {
+            reminderBtn.setVisibility(View.GONE);
+        }
 
         // reset imdb info as there maybe some delay in fetching the current views rating
         TextView rating = (TextView) convertView.findViewById(R.id.rating);
@@ -218,6 +226,16 @@ public class ProgrammesAdapter extends BaseAdapter {
 
         // Return the completed view to render on screen
         return convertView;
+    }
+
+    //To hide notify me button for running programmes
+    private boolean isProgrammeRunning(Date programmeDate)
+    {
+        Date currDate = Calendar.getInstance().getTime();
+        if (currDate.after(programmeDate))
+            return true;
+        else
+            return false;
     }
 
     private String getFriendlyDateTime(Date date) {
@@ -255,11 +273,12 @@ public class ProgrammesAdapter extends BaseAdapter {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         // default 15 mins
-        Long reminderInterval = settingsPrefs.getLong(SettingsDialogFragment.REMINDER_INTERVAL,
-                15*60*1000);
+//        Long reminderInterval = settingsPrefs.getLong(SettingsDialogFragment.REMINDER_INTERVAL,
+//                15*60*1000);
         try {
             Long startTime = programmejson.getLong("starttime");
-            alarmManager.set(AlarmManager.RTC, startTime - reminderInterval, pendingIntent);
+            JSONArray reminderInterval = programmejson.getJSONArray("remindertimearray");
+            alarmManager.set(AlarmManager.RTC, startTime - reminderInterval.getLong(0), pendingIntent);
         } catch (JSONException e) {
             // do not set alarm
             Toast.makeText(context, R.string.notification_failure, Toast.LENGTH_SHORT).show();
