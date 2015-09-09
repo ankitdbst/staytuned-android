@@ -124,7 +124,8 @@ public class ProgrammesAdapter extends BaseAdapter {
                 int position = (Integer) v.getTag();
                 final Bitmap imageNotification;
                 final Programme programme = (Programme) getItem(position);
-                Long itemIdLong = Long.parseLong(programme.getId());
+                long longId = ProgrammesFragment.idToLong(programme.getId());
+
                 //TODO move it out of on click listener
                 final SharedPreferences notificationSubscribed = context
                         .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0);
@@ -135,7 +136,7 @@ public class ProgrammesAdapter extends BaseAdapter {
                     editor.remove(programme.getId());
                     editor.apply();
 
-                    cancelNotification(view, itemIdLong, position);
+                    cancelNotification(view, longId, position);
                     Toast.makeText(context, "Reminder cancelled", Toast.LENGTH_SHORT).show();
                 } else {
                     //add to subscription pref data.
@@ -145,7 +146,8 @@ public class ProgrammesAdapter extends BaseAdapter {
                     long reminderArray[] = {reminderInterval};
                     JSONObject programmejson = new JSONObject();
                     try {
-                        JSONArray reminderIntervalArray = new JSONArray(reminderInterval);
+                        JSONArray reminderIntervalArray = new JSONArray(reminderArray);
+                        programmejson.put("id",programme.getId());
                         programmejson.put("title",programme.getTitle());
                         programmejson.put("starttime",programme.getStart().getTime());
                         programmejson.put("stoptime",programme.getStop().getTime());
@@ -184,7 +186,7 @@ public class ProgrammesAdapter extends BaseAdapter {
                                 }
                             });
                     curlSingleton.addToRequestQueue(imageRequest);
-                    scheduleNotification(view, itemIdLong, programmejson);
+                    scheduleNotification(view, longId, programmejson);
                     Toast.makeText(context, "Reminder set", Toast.LENGTH_SHORT).show();
                 }
                 programme.setSubscribed(!programme.getSubscribed());
@@ -200,6 +202,9 @@ public class ProgrammesAdapter extends BaseAdapter {
         duration.setText(Integer.toString(programme.getDuration()) + " min");
         if(isProgrammeRunning(programme.getStart())) {
             reminderBtn.setVisibility(View.GONE);
+        }
+        else {
+            reminderBtn.setVisibility(View.VISIBLE);
         }
 
         // reset imdb info as there maybe some delay in fetching the current views rating

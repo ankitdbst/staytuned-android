@@ -34,7 +34,7 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         Log.v("receiver","FiringNotification");
         Intent notificationIntent = new Intent(context, MainActivity.class);
         JSONObject programmejson;
-        String title="",channel="";
+        String title="",channel="",id="";
         long starttime = 0,stoptime;
         FileInputStream fis;
         Bitmap notificationImage = null;
@@ -52,15 +52,26 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
 
         // Set the intent that will fire when the user taps the notification.
         //builder.setContentIntent(pendingIntent);
-
-        builder.setAutoCancel(true);
-        long id = intent.getLongExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID,0);
+        String jsonString = intent.getStringExtra(ProgrammesFragment.NOTIFICATION_INTENT_JSON);
         try {
-            fis = context.openFileInput(String.valueOf(id));
+            programmejson = new JSONObject(jsonString);
+            id = programmejson.getString("id");
+            title = programmejson.getString("title");
+            channel = programmejson.getString("channel");
+            starttime = programmejson.getLong("starttime");
+            stoptime = programmejson.getLong("stoptime");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            fis = context.openFileInput(id);
             notificationImage = BitmapFactory.decodeStream(fis);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+        builder.setAutoCancel(true);
         //Set the large icon, which appears on the left of the notification.
         builder.setSmallIcon(R.mipmap.ic_launcher);
         //builder.setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher));
@@ -70,24 +81,15 @@ public class NotificationTriggerReceiver extends BroadcastReceiver {
         builder.setContentIntent(pendingIntent);
         Log.v("receiver", intent.getStringExtra(ProgrammesFragment.NOTIFICATION_INTENT_JSON));
         Log.v("receiver", "notification id: " + (int) intent.getLongExtra(ProgrammesFragment.NOTIFICATION_INTENT_ID, 0));
-        String jsonString = intent.getStringExtra(ProgrammesFragment.NOTIFICATION_INTENT_JSON);
-        try {
-                programmejson = new JSONObject(jsonString);
-                title = programmejson.getString("title");
-                channel = programmejson.getString("channel");
-                starttime = programmejson.getLong("starttime");
-                stoptime = programmejson.getLong("stoptime");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
         builder.setContentTitle(title);
         builder.setContentText("On "+channel);
         int timeSubtext = getTimeForSubtext(starttime);
         if(timeSubtext >= 0)
-            builder.setSubText("In "+getTimeForSubtext(starttime)+" minutes");
+            builder.setSubText("In "+timeSubtext+" minutes");
         else
         {
-            builder.setSubText("Running since "+getTimeForSubtext(starttime)+" minutes");
+            timeSubtext = timeSubtext*-1;
+            builder.setSubText("Running since "+timeSubtext+" minutes");
         }
 
         //Send the notification. This will immediately display the notification icon in the

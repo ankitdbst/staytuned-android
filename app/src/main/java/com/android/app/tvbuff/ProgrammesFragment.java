@@ -218,6 +218,18 @@ public class ProgrammesFragment extends ListFragment {
         }
     }
 
+    public static long idToLong(String longIdString) {
+        long longId = 0;
+        long mod = 1000000009;
+        for(int i=0;i<longIdString.length();i++)
+        {
+            if(longIdString.charAt(i)>='0'&&longIdString.charAt(i)<='9') {
+                longId = ((longId * 10) % mod + (longIdString.charAt(i) - '0') % mod) % mod;
+            }
+        }
+        return longId;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Create the list fragment's content view by calling the super method
