@@ -61,6 +61,7 @@ public class ProgrammesFragment extends ListFragment {
 
     //public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
     public static final String DATA_SOURCE_URL = "stay-tunedapp.rhcloud.com";
+    //public static final String DATA_SOURCE_URL = "10.0.2.2";
     //public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
     public static final String CHANNEL_LIST_PATH = "/api/channels";
     //public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
@@ -679,10 +680,22 @@ public class ProgrammesFragment extends ListFragment {
                                 p.setSubscribed(getActivity()
                                         .getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0)
                                         .contains(programmeId));
-                                // Retrieve IMDb for movies only
-                                if (mCategory.equals("movies")) {
-                                    IMDb.queue(adapter, null, p, mInstance);
+
+                                if (!programmeObj.isNull("imdb")) {
+                                    JSONObject imdbObj = programmeObj.getJSONObject("imdb");
+
+                                    IMDb imdb = new IMDb();
+                                    imdb.id = imdbObj.getString(IMDb.ID);
+                                    imdb.plot = imdbObj.getString(IMDb.PLOT);
+                                    imdb.title = imdbObj.getString(IMDb.TITLE);
+                                    imdb.year = imdbObj.getString(IMDb.YEAR);
+                                    imdb.rating = imdbObj.getString(IMDb.RATING);
+                                    imdb.actors = imdbObj.getString(IMDb.ACTORS);
+                                    imdb.director = imdbObj.getString(IMDb.DIRECTOR);
+
+                                    p.setIMDb(imdb);
                                 }
+
                                 list.add(p);
                             }
 

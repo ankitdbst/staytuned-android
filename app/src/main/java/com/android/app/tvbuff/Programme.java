@@ -27,8 +27,7 @@ public class Programme {
         this.collapsed = collapsed;
     }
 
-    private IMDbDetail imDbDetail;
-    private boolean imDbNA = true;
+    private IMDb imdb = null;
 
     public static Comparator<Programme> getCompByStartTime() {
         return new Comparator<Programme>(){
@@ -115,21 +114,12 @@ public class Programme {
         }
     }
 
-    public void setImDbDetail(IMDbDetail imDbDetail) {
-        setImDbNA(false);
-        this.imDbDetail = imDbDetail;
+    public void setIMDb(IMDb imdb) {
+        this.imdb = imdb;
     }
 
-    public IMDbDetail getImDbDetail() {
-        return imDbDetail;
-    }
-
-    void setImDbNA(boolean status) {
-        imDbNA = status;
-    }
-
-    public boolean isImDbNA() {
-        return imDbNA;
+    public IMDb getImdb() {
+        return imdb;
     }
 
     void setDuration(int duration) {
