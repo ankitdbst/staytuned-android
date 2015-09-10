@@ -36,7 +36,8 @@ public class PhoneBootReceiver extends BroadcastReceiver {
         {
            // Toast.makeText(context,"Reading preference file",Toast.LENGTH_SHORT);
             //Log.v("bootrestart", key + " value: " + Long.parseLong(storedData.get(key).toString()));
-            long id = Long.parseLong(key);
+            //long id = Long.parseLong(key);
+            long id = ProgrammesFragment.idToLong(key);
             //iterating through each item
             try {
                 programmejson = new JSONObject(storedData.get(key).toString());

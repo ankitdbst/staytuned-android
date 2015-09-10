@@ -1,5 +1,6 @@
 package com.android.app.tvbuff;
 
+import android.content.SharedPreferences;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
@@ -17,6 +18,9 @@ import android.support.v4.widget.DrawerLayout;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -52,6 +56,7 @@ public class MainActivity extends ActionBarActivity
      */
     private CharSequence mTitle;
     private ProgrammesFragment programmesFragment;
+    private int notificationSubscriptionsCleanupLimit = 20;
 
     private static long getFragmentId(String category, int position) {
         int idx = Arrays.asList(ProgrammesFragment.programmeCategories).indexOf(category)+1;
@@ -89,6 +94,18 @@ public class MainActivity extends ActionBarActivity
                     }
                 });
 
+
+
+        //Cleanup of Subscriptions preferences and notification image files
+        Runnable runnable = new Runnable() {
+
+            @Override
+            public void run() {
+                //background task
+                cleanUpSubscriptionPrefs();
+            }
+        };
+        new Thread(runnable).start();
 
         // Create a tab listener that is called when the user changes tabs.
         ActionBar.TabListener tabListener = new ActionBar.TabListener() {
@@ -160,6 +177,32 @@ public class MainActivity extends ActionBarActivity
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
 
+    }
+
+    private void cleanUpSubscriptionPrefs() {
+        final SharedPreferences notificationSubscribed = this.getSharedPreferences(ProgrammesFragment.NOTIFICATION_PREF, 0);
+        final Map<String,?> storedData = notificationSubscribed.getAll();
+        if(storedData.size() >= notificationSubscriptionsCleanupLimit) {
+            //remove all past notifications which are already fired
+            SharedPreferences.Editor editor = notificationSubscribed.edit();
+            String id = "";
+            for(String key:storedData.keySet()) {
+                long stoptime = 0;
+                try {
+                    JSONObject programmejson = new JSONObject(storedData.get(key).toString());
+                    stoptime = programmejson.getLong("stoptime");
+                    id = programmejson.getString("id");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                if(stoptime < System.currentTimeMillis()) {
+                    editor.remove(key);
+                    //deleting the compressed notification image also
+                    this.deleteFile(id);
+                }
+            }
+            editor.apply();
+        }
     }
 
     /**
