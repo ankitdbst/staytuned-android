@@ -16,12 +16,12 @@ import org.json.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Random;
 
 /**
  * Created by nitbhati on 7/5/15.
  */
 public class NotificationTriggerReceiver extends BroadcastReceiver {
-
 
     @Override
     public void onReceive(Context context, Intent intent) {

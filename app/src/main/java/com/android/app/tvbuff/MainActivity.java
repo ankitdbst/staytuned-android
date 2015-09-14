@@ -1,6 +1,7 @@
 package com.android.app.tvbuff;
 
 import android.content.SharedPreferences;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
@@ -11,6 +12,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,7 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 
 
-public class MainActivity extends ActionBarActivity
+public class MainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks, FiltersDialogFragment.FiltersDialogListener {
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -67,7 +70,12 @@ public class MainActivity extends ActionBarActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final ActionBar actionBar = getSupportActionBar();
+        //final ActionBar actionBar = getSupportActionBar();
+        Toolbar actionBar = (Toolbar) findViewById(R.id.toolbar);
+        if(actionBar!=null)
+            setSupportActionBar(actionBar);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
@@ -84,16 +92,33 @@ public class MainActivity extends ActionBarActivity
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
 
-        mViewPager.setOnPageChangeListener(
-                new ViewPager.SimpleOnPageChangeListener() {
-                    @Override
-                    public void onPageSelected(int position) {
-                        // When swiping between pages, select the
-                        // corresponding tab.
-                        getSupportActionBar().setSelectedNavigationItem(position);
-                    }
-                });
+//        mViewPager.setOnPageChangeListener(
+//                new ViewPager.SimpleOnPageChangeListener() {
+//                    @Override
+//                    public void onPageSelected(int position) {
+//                        // When swiping between pages, select the
+//                        // corresponding tab.
+//                        //getSupportActionBar().setSelectedNavigationItem(position);
+//                    }
+//                });
+        mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
 
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                mViewPager.setCurrentItem(tab.getPosition(), true);
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
 
 
         //Cleanup of Subscriptions preferences and notification image files
@@ -124,8 +149,10 @@ public class MainActivity extends ActionBarActivity
         };
 
         for (String language : ProgrammesFragment.programmeLanguages) {
-            actionBar.addTab(actionBar.newTab().setText(language).setTabListener(tabListener));
+            //actionBar.addTab(actionBar.newTab().setText(language).setTabListener(tabListener));
+            tabLayout.addTab(tabLayout.newTab().setText(language));
         }
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
         mNavigationDrawerFragment.updateDrawerCallback(this);
     }
@@ -140,7 +167,7 @@ public class MainActivity extends ActionBarActivity
 
     public void restoreActionBar() {
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+       // actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(mTitle);
     }

@@ -639,7 +639,7 @@ public class ProgrammesFragment extends ListFragment {
                 .appendQueryParameter(CHANNEL_LIST_TO_DATE, toDate)
                 .build()
                 .toString();
-
+        Log.v("api",url);
         JsonRequest jsObjRequest = new JsonArrayRequest
                 (Request.Method.GET, url, null,  new Response.Listener<JSONArray>() {
 
