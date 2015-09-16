@@ -217,6 +217,7 @@ public class ProgrammesAdapter extends BaseAdapter {
         directors.setText("");
 
         if (programme.getImdb() != null) {
+            rating.setVisibility(View.VISIBLE);
             showIMDbInfo(programme.getImdb(), convertView);
         } else {
             rating.setVisibility(View.GONE);

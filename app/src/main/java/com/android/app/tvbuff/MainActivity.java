@@ -1,6 +1,7 @@
 package com.android.app.tvbuff;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity
     private CharSequence mTitle;
     private ProgrammesFragment programmesFragment;
     private int notificationSubscriptionsCleanupLimit = 20;
+    private DrawerLayout mDrawerLayout;
 
     private static long getFragmentId(String category, int position) {
         int idx = Arrays.asList(ProgrammesFragment.programmeCategories).indexOf(category)+1;
@@ -75,6 +77,8 @@ public class MainActivity extends AppCompatActivity
         if(actionBar!=null)
             setSupportActionBar(actionBar);
 
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout.setStatusBarBackgroundColor(Color.parseColor("#2196F3"));
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
