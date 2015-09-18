@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.Toolbar
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/toolbar"
-    android:background="#2196F3"
+    android:background="@color/app_theme_color"
     android:layout_width="match_parent"
+    app:navigationIcon="@drawable/ic_menu_white_24dp"
+    app:collapseIcon="@drawable/ic_menu_white_24dp"
+    android:navigationIcon="@drawable/ic_menu_white_24dp"
     android:layout_height="wrap_content">
 </android.support.v7.widget.Toolbar>

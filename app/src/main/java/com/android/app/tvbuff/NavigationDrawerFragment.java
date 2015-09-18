@@ -1,5 +1,6 @@
 package com.android.app.tvbuff;
 
+import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.support.v7.app.ActionBar;
@@ -21,7 +22,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -86,7 +90,7 @@ public class NavigationDrawerFragment extends Fragment {
         for (String category : ProgrammesFragment.programmeCategories) {
             Map<String, String> m = new HashMap<>();
             m.put(ITEM_CATEGORY, category);
-            displayItems.add(getStringResourceByName("title_" + category));
+            displayItems.add(category);
             items.add(m);
         }
 
@@ -120,8 +124,9 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        mDrawerListView = (ListView) inflater.inflate(
+        View navigationView = inflater.inflate(
                 R.layout.fragment_navigation_drawer, container, false);
+        mDrawerListView = (ListView) navigationView.findViewById(R.id.navigation_drawer_list);
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -129,12 +134,22 @@ public class NavigationDrawerFragment extends Fragment {
             }
         });
 
-        mDrawerListView.setAdapter(new ArrayAdapter<>(
-                getActivity().getBaseContext(),
-                android.R.layout.simple_list_item_activated_1,
-                displayItems));
+//        RoundedImageView logoView = new RoundedImageView(getActivity());
+//        logoView.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.logo5));
+////        ViewGroup.LayoutParams params = (ViewGroup.LayoutParams) logoView.getLayoutParams();
+////        params.height = 50;
+////        params.width = 50;
+//        logoView.setLayoutParams(new ViewGroup.LayoutParams(200, 200));
+//        ((RelativeLayout) navigationView).addView(logoView, 1);
+
+//        mDrawerListView.setAdapter(new ArrayAdapter<>(
+//                getActivity().getBaseContext(),
+//                R.layout.navigation_list_item,
+//                displayItems));
+
+        mDrawerListView.setAdapter(new NavigationAdapter(getActivity(), displayItems));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
-        return mDrawerListView;
+        return navigationView;
     }
 
     public boolean isDrawerOpen() {
@@ -262,10 +277,10 @@ public class NavigationDrawerFragment extends Fragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        // If the drawer is open, show the global app actions in the action bar. See also
-        // showGlobalContextActionBar, which controls the top-left area of the action bar.
+//         If the drawer is open, show the global app actions in the action bar. See also
+//         showGlobalContextActionBar, which controls the top-left area of the action bar.
         if (mDrawerLayout != null && isDrawerOpen()) {
-            inflater.inflate(R.menu.global, menu);
+            inflater.inflate(R.menu.menu_main, menu);
             showGlobalContextActionBar();
         }
         super.onCreateOptionsMenu(menu, inflater);
@@ -284,7 +299,7 @@ public class NavigationDrawerFragment extends Fragment {
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setTitle(R.string.app_name);
+//        actionBar.setTitle(R.string.app_name);
     }
 
     private ActionBar getActionBar() {

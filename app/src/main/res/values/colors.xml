@@ -13,5 +13,7 @@
     <color name="list_row_hover_end_color">#ebeef0</color>
     <color name="scroll_to_top_background">#000000</color>
     <color name="scroll_to_top_text">#FFFFFF</color>
+    <color name="app_theme_color">#2196F3</color>
+    <color name="common_border_color">#2196F3</color>
 
 </resources>

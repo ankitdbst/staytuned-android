@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">TV Buff</string>
+    <string name="app_name">Stay Tuned</string>
 
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>
 
-    <string name="title_activity_main">TV Buff</string>
+    <string name="title_activity_main">Stay Tuned</string>
 
     <string name="connection_failure">Unable to connect. Please check you connection and retry!
     </string>

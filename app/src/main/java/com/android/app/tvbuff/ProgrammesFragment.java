@@ -23,6 +23,7 @@ import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -61,7 +62,7 @@ public class ProgrammesFragment extends ListFragment {
 
     //public static final String DATA_SOURCE_URL = "timesofindia.indiatimes.com";
     public static final String DATA_SOURCE_URL = "stay-tunedapp.rhcloud.com";
-    //public static final String DATA_SOURCE_URL = "10.0.2.2";
+//    public static final String DATA_SOURCE_URL = "10.0.2.2";
     //public static final String CHANNEL_LIST_PATH = "tvschannellist.cms";
     public static final String CHANNEL_LIST_PATH = "/api/channels";
     //public static final String SCHEDULE_LIST_PATH = "tvschedulejson.cms";
@@ -130,7 +131,7 @@ public class ProgrammesFragment extends ListFragment {
     /* Calendar instance */
     private Calendar calendar = Calendar.getInstance();
 
-    private ProgressDialog pDialog;
+    private ProgressBar pDialog;
 
     /* Store programme items */
     private ArrayList<Programme> programmeList;
@@ -156,6 +157,7 @@ public class ProgrammesFragment extends ListFragment {
     private String currentPrefKey;
 
 	private SwipeRefreshLayout mSwipeRefreshLayout;
+//    private RoundedImageView scrollToTop;
     private TextView scrollToTop;
 
     public static class CurlSingleton {
@@ -236,11 +238,15 @@ public class ProgrammesFragment extends ListFragment {
         // Create the list fragment's content view by calling the super method
         //final View listFragmentView = super.onCreateView(inflater, container, savedInstanceState);
         final View listFragmentView = inflater.inflate(R.layout.fragment_programmes, container , false);
+//        scrollToTop = new RoundedImageView(getActivity());
+//        scrollToTop.setImageDrawable(getResources().getDrawable(R.drawable.up));
+
         scrollToTop = (TextView) listFragmentView.findViewById(R.id.scrollToTop);
         //tv.setText("scrolling");
 
         // Now create a SwipeRefreshLayout to wrap the fragment's content view
         mSwipeRefreshLayout = new ListFragmentSwipeRefreshLayout(container.getContext());
+//        mSwipeRefreshLayout.addView(scrollToTop, 0);
         // Add the list fragment's content view to the SwipeRefreshLayout, making sure that it fills
         // the SwipeRefreshLayout
         mSwipeRefreshLayout.addView(listFragmentView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
@@ -343,10 +349,12 @@ public class ProgrammesFragment extends ListFragment {
         currentPrefKey = getActivity().getPackageName() + "." + mCategory + "_" + mLanguage;
 
         // Showing progress dialog
-        pDialog = new ProgressDialog(getActivity());
-        pDialog.setMessage("Please wait...");
-        pDialog.setCancelable(false);
-        pDialog.show();
+        pDialog = (ProgressBar) getActivity().findViewById(R.id.progress_dialog);
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) pDialog.getLayoutParams();
+        params.setMargins(0, 0, 0, 0);
+        params.addRule(RelativeLayout.CENTER_VERTICAL);
+        pDialog.setLayoutParams(params);
+        pDialog.setVisibility(View.VISIBLE);
 
         mInstance = CurlSingleton.getInstance(getActivity().getApplicationContext());
 
@@ -400,6 +408,11 @@ public class ProgrammesFragment extends ListFragment {
                         (firstVisibleItem + visibleItemCount + PREFETCH_LIMIT == totalItemCount)) {
                     if (!loading) {
                         loading = true;
+                        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) pDialog.getLayoutParams();
+                        params.setMargins(0, 0, 0, 20);
+                        params.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                        pDialog.setLayoutParams(params);
+                        pDialog.setVisibility(View.VISIBLE);
                         loadData(false);
                     }
                 }
@@ -489,8 +502,9 @@ public class ProgrammesFragment extends ListFragment {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         // Handle error
-                        if (pDialog.isShowing())
-                            pDialog.dismiss();
+                        if (pDialog.getVisibility() == View.VISIBLE) {
+                            pDialog.setVisibility(View.GONE);
+                        }
                     }
                 });
 
@@ -612,7 +626,11 @@ public class ProgrammesFragment extends ListFragment {
             programmeMap.clear();
             // loading
             loading = true;
-            pDialog.show();
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) pDialog.getLayoutParams();
+            params.setMargins(0, 0, 0, 0);
+            params.addRule(RelativeLayout.CENTER_VERTICAL);
+            pDialog.setLayoutParams(params);
+            pDialog.setVisibility(View.VISIBLE);
         }
 
         String fromDate = dateFormat.format(calendar.getTime());
@@ -716,15 +734,17 @@ public class ProgrammesFragment extends ListFragment {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        if (pDialog.isShowing())
-                            pDialog.dismiss();
+                        if (pDialog.getVisibility() == View.VISIBLE) {
+                            pDialog.setVisibility(View.GONE);
+                        }
                         loading = false;
                     }
                 }, new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if (pDialog.isShowing())
-                            pDialog.dismiss();
+                        if (pDialog.getVisibility() == View.VISIBLE) {
+                            pDialog.setVisibility(View.GONE);
+                        }
                         loading = false;
                         Log.v(TAG, "Failed to load data: " + error.getLocalizedMessage());
                         if (getActivity() != null && error instanceof NetworkError) {

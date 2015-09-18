@@ -13,6 +13,7 @@
         android:dividerHeight="1dp"
         android:listSelector="@drawable/list_row_selector"
         android:animateLayoutChanges="true"/>
+
     <TextView
         android:layout_marginTop="10dp"
         android:id="@+id/scrollToTop"
@@ -23,10 +24,18 @@
         android:visibility="visible"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:background="@color/scroll_to_top_background"
-        android:textSize="15dp"
-        android:textColor="@color/scroll_to_top_text"
+        android:background="@drawable/rounded_corner"
+        android:textSize="14dp"
+        android:textColor="@android:color/white"
         />
 
+    <ProgressBar
+        android:id="@+id/progress_dialog"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:indeterminate="true"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:visibility="gone"/>
 
 </RelativeLayout>

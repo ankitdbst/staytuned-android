@@ -74,15 +74,20 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         //final ActionBar actionBar = getSupportActionBar();
         Toolbar actionBar = (Toolbar) findViewById(R.id.toolbar);
-        if(actionBar!=null)
+        if(actionBar!=null) {
             setSupportActionBar(actionBar);
+            actionBar.setTitleTextColor(Color.WHITE);
+            actionBar.setNavigationIcon(R.drawable.ic_menu_white_24dp);
+//            actionBar.setTitle(mCategory);
+        }
 
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerLayout.setStatusBarBackgroundColor(Color.parseColor("#2196F3"));
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-        mTitle = getTitle();
+//        mTitle = getTitle();
+//        mTitle = mCategory;
 
         // Set up the drawer.
         mNavigationDrawerFragment.setUp(
@@ -169,7 +174,14 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    private String getStringResourceByName(String aString) {
+        String packageName = getPackageName();
+        int resId = getResources().getIdentifier(aString, "string", packageName);
+        return getString(resId);
+    }
+
     public void restoreActionBar() {
+        mTitle = getStringResourceByName("title_" + mCategory);
         ActionBar actionBar = getSupportActionBar();
        // actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         actionBar.setDisplayShowTitleEnabled(true);

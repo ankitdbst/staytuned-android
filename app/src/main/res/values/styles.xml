@@ -1,12 +1,19 @@
 <resources>
-
+    <!--<style name="activatedBackgroundIndicator">-->
+        <!--<item name="android:background">?android:attr/activatedBackgroundIndicator</item>-->
+    <!--</style>-->
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowTranslucentStatus">true</item>
+        <!--<item name="activatedBackgroundIndicator">@drawable/list_row_selector</item>-->
+        <item name="android:activatedBackgroundIndicator">@drawable/list_row_selector</item>
 
+        <!--<item name="android:textColorPrimary">@android:color/white</item>-->
+        <item name="actionMenuTextColor">@android:color/white</item>
+        <item name="android:textColorSecondary">@android:color/white</item>
     </style>
 
 </resources>
