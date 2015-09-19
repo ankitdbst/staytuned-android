@@ -25,6 +25,7 @@
     <!-- IMDB -->
     <string name="actors_label">Actors:</string>
     <string name="directors_label">Directors:</string>
+    <string name="user_rating">User Rating:</string>
     <string name="subscribe">Notify Me</string>
 
     <!-- General -->

@@ -27,7 +27,16 @@ public class Programme {
         this.collapsed = collapsed;
     }
 
+    public void setTimes(Times times) {
+        this.times = times;
+    }
+
+    public Times getTimes() {
+        return times;
+    }
+
     private IMDb imdb = null;
+    private Times times = null;
 
     public static Comparator<Programme> getCompByStartTime() {
         return new Comparator<Programme>(){

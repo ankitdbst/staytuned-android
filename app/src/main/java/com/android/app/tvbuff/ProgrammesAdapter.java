@@ -83,13 +83,8 @@ public class ProgrammesAdapter extends BaseAdapter {
 
         final View view = convertView;
 
-        // Collapse/Expand for IMDb detail view
         RelativeLayout imdbDetailView = (RelativeLayout) convertView.findViewById(R.id.imdb_detail);
-        if (programme.getCollapsed()) {
-            imdbDetailView.setVisibility(View.GONE);
-        } else {
-            imdbDetailView.setVisibility(View.VISIBLE);
-        }
+        RelativeLayout timesDetailView = (RelativeLayout) convertView.findViewById(R.id.times_detail);
 
         // Lookup view for data population
         TextView title = (TextView) convertView.findViewById(R.id.title);
@@ -200,11 +195,33 @@ public class ProgrammesAdapter extends BaseAdapter {
         channelName.setText(programme.getChannelName());
         startTime.setText(getFriendlyDateTime(programme.getStart()));
         duration.setText(Integer.toString(programme.getDuration()) + " min");
+
+        if (programme.getCollapsed()) {
+            reminderBtn.setVisibility(View.GONE);
+        } else {
+            reminderBtn.setVisibility(View.VISIBLE);
+        }
+
+        if (programme.getImdb() != null) {
+            // Collapse/Expand for IMDb detail view
+            if (programme.getCollapsed()) {
+                imdbDetailView.setVisibility(View.GONE);
+            } else {
+                imdbDetailView.setVisibility(View.VISIBLE);
+            }
+            timesDetailView.setVisibility(View.GONE);
+        } else {
+            // Collapse/Expand for Times detail view
+            if (programme.getCollapsed()) {
+                timesDetailView.setVisibility(View.GONE);
+            } else {
+                timesDetailView.setVisibility(View.VISIBLE);
+            }
+            imdbDetailView.setVisibility(View.GONE);
+        }
+
         if(isProgrammeRunning(programme.getStart())) {
             reminderBtn.setVisibility(View.GONE);
-        }
-        else {
-            reminderBtn.setVisibility(View.VISIBLE);
         }
 
         // reset imdb info as there maybe some delay in fetching the current views rating
@@ -219,6 +236,18 @@ public class ProgrammesAdapter extends BaseAdapter {
         if (programme.getImdb() != null) {
             rating.setVisibility(View.VISIBLE);
             showIMDbInfo(programme.getImdb(), convertView);
+        } else if (programme.getTimes() != null) {
+            Times t = programme.getTimes();
+            TextView timesPlot = (TextView) convertView.findViewById(R.id.times_plot);
+            TextView userRating = (TextView) convertView.findViewById(R.id.user_rating);
+
+            if (!t.description.equals("NA")) {
+                timesPlot.setText(t.description);
+            } else {
+                timesPlot.setText(t.synopsis);
+            }
+            userRating.setText(t.userRating);
+            rating.setVisibility(View.GONE);
         } else {
             rating.setVisibility(View.GONE);
         }

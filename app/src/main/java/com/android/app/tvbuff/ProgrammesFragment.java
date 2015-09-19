@@ -22,6 +22,7 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -420,15 +421,17 @@ public class ProgrammesFragment extends ListFragment {
             }
         });
 
-        // No detail view for other categories?!
-        if (mCategory.equals("movies")) {
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//        // No detail view for other categories?!
+//        if (mCategory.equals("movies")) {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Programme programme = programmeList.get(position);
-                    Boolean programmeCollapsed = programme.getCollapsed();
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Programme programme = programmeList.get(position);
+                Boolean programmeCollapsed = programme.getCollapsed();
 
+                if (mCategory.equals("movies") || (
+                        mCategory.equals("entertainment") && mLanguage.equals("english"))) {
                     RelativeLayout imdbDetailView = (RelativeLayout) view.findViewById(R.id.imdb_detail);
 
                     if (programmeCollapsed) {
@@ -436,10 +439,28 @@ public class ProgrammesFragment extends ListFragment {
                     } else {
                         imdbDetailView.setVisibility(View.GONE);
                     }
-                    programme.setCollapsed(!programmeCollapsed);
+                } else {
+                    RelativeLayout timesDetailView = (RelativeLayout) view.findViewById(R.id.times_detail);
+
+                    if (programmeCollapsed) {
+                        timesDetailView.setVisibility(View.VISIBLE);
+                    } else {
+                        timesDetailView.setVisibility(View.GONE);
+                    }
                 }
-            });
-        }
+
+                Button subscribe = (Button) view.findViewById(R.id.subscribe);
+
+                if (programmeCollapsed) {
+                    subscribe.setVisibility(View.VISIBLE);
+                } else {
+                    subscribe.setVisibility(View.GONE);
+                }
+
+                programme.setCollapsed(!programmeCollapsed);
+            }
+        });
+//        }
 
         setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
 
@@ -712,6 +733,15 @@ public class ProgrammesFragment extends ListFragment {
                                     imdb.director = imdbObj.getString(IMDb.DIRECTOR);
 
                                     p.setIMDb(imdb);
+                                } else if (!programmeObj.isNull("times")) {
+                                    JSONObject timesObj = programmeObj.getJSONObject("times");
+
+                                    Times times = new Times();
+                                    times.synopsis = timesObj.getString(Times.SYNOPSIS);
+                                    times.description = timesObj.getString(Times.DESC);
+                                    times.userRating = timesObj.getString(Times.USER_RATING);
+
+                                    p.setTimes(times);
                                 }
 
                                 list.add(p);
