@@ -88,6 +88,14 @@ public class ProgrammesFragment extends ListFragment {
             "hindi"
     };
 
+    // Add resource mappings of Times corresponding to our categories
+    public static String getTimesResource(String category) {
+        if (category.equals("lifestyle")) {
+            return "food & lifestyle";
+        }
+        return category;
+    }
+
     // Configuration param names
     public static final String USER_ID = "userid";
     //public static final String CHANNEL_LIST = "channellist";
@@ -490,7 +498,7 @@ public class ProgrammesFragment extends ListFragment {
                 .scheme("http")
                 .authority(DATA_SOURCE_URL)
                 .path(CHANNEL_LIST_PATH)
-                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, mCategory)
+                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, getTimesResource(mCategory))
                 .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, mLanguage)
                 .build()
                 .toString();
