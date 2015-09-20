@@ -45,6 +45,8 @@ public class ProgrammesAdapter extends BaseAdapter {
     SharedPreferences settingsPrefs;
     String category;
 
+    public static String STR_NO_SYNOPSIS = "There is no synopsis available for this episode.";
+
     public ProgrammesAdapter(Context context, ArrayList<Programme> programmes, String category) {
         this.context = context;
         this.programmeArrayList = programmes;
@@ -239,14 +241,14 @@ public class ProgrammesAdapter extends BaseAdapter {
         } else if (programme.getTimes() != null) {
             Times t = programme.getTimes();
             TextView timesPlot = (TextView) convertView.findViewById(R.id.times_plot);
-            TextView userRating = (TextView) convertView.findViewById(R.id.user_rating);
+//            TextView userRating = (TextView) convertView.findViewById(R.id.user_rating);
 
-            if (!t.description.equals("NA")) {
+            if (!t.description.equals(STR_NO_SYNOPSIS)) {
                 timesPlot.setText(t.description);
             } else {
                 timesPlot.setText(t.synopsis);
             }
-            userRating.setText(t.userRating);
+//            userRating.setText(t.userRating);
             rating.setVisibility(View.GONE);
         } else {
             rating.setVisibility(View.GONE);
@@ -258,13 +260,10 @@ public class ProgrammesAdapter extends BaseAdapter {
     }
 
     //To hide notify me button for running programmes
-    private boolean isProgrammeRunning(Date programmeDate)
+    public static boolean isProgrammeRunning(Date programmeDate)
     {
         Date currDate = Calendar.getInstance().getTime();
-        if (currDate.after(programmeDate))
-            return true;
-        else
-            return false;
+        return currDate.after(programmeDate);
     }
 
     private String getFriendlyDateTime(Date date) {

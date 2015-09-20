@@ -451,10 +451,10 @@ public class ProgrammesFragment extends ListFragment {
 
                 Button subscribe = (Button) view.findViewById(R.id.subscribe);
 
-                if (programmeCollapsed) {
-                    subscribe.setVisibility(View.VISIBLE);
-                } else {
+                if (!programmeCollapsed || ProgrammesAdapter.isProgrammeRunning(programme.getStart())) {
                     subscribe.setVisibility(View.GONE);
+                } else {
+                    subscribe.setVisibility(View.VISIBLE);
                 }
 
                 programme.setCollapsed(!programmeCollapsed);
