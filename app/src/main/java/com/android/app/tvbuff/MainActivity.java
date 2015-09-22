@@ -99,7 +99,8 @@ public class MainActivity extends AppCompatActivity
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mViewPager.setAdapter(mSectionsPagerAdapter);
 
 //        mViewPager.setOnPageChangeListener(
 //                new ViewPager.SimpleOnPageChangeListener() {
@@ -170,7 +171,7 @@ public class MainActivity extends AppCompatActivity
     public void onNavigationDrawerItemSelected(Map<String, String> item) {
         mCategory = item.get(NavigationDrawerFragment.ITEM_CATEGORY);
         if (mViewPager != null) {
-            mViewPager.setAdapter(new SectionsPagerAdapter(getSupportFragmentManager()));
+            mViewPager.setAdapter(mSectionsPagerAdapter);
         }
     }
 

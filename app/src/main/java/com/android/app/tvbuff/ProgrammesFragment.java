@@ -243,6 +243,12 @@ public class ProgrammesFragment extends ListFragment {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initialDataLoad(savedInstanceState);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Create the list fragment's content view by calling the super method
         //final View listFragmentView = super.onCreateView(inflater, container, savedInstanceState);
@@ -254,17 +260,19 @@ public class ProgrammesFragment extends ListFragment {
         //tv.setText("scrolling");
 
         // Now create a SwipeRefreshLayout to wrap the fragment's content view
-        mSwipeRefreshLayout = new ListFragmentSwipeRefreshLayout(container.getContext());
+        if(mSwipeRefreshLayout == null) {
+            mSwipeRefreshLayout = new ListFragmentSwipeRefreshLayout(container.getContext());
+            mSwipeRefreshLayout.addView(listFragmentView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            // Make sure that the SwipeRefreshLayout will fill the fragment
+            mSwipeRefreshLayout.setLayoutParams(
+                    new ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT));
+
+        }
 //        mSwipeRefreshLayout.addView(scrollToTop, 0);
         // Add the list fragment's content view to the SwipeRefreshLayout, making sure that it fills
         // the SwipeRefreshLayout
-        mSwipeRefreshLayout.addView(listFragmentView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
-
-        // Make sure that the SwipeRefreshLayout will fill the fragment
-        mSwipeRefreshLayout.setLayoutParams(
-                new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT));
 
         // Now return the SwipeRefreshLayout as this fragment's content view
         return mSwipeRefreshLayout;
@@ -350,35 +358,15 @@ public class ProgrammesFragment extends ListFragment {
 
         setHasOptionsMenu(true);
 
-        Bundle args = getArguments();
-
-        mCategory = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
-        mLanguage = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
-
-        currentPrefKey = getActivity().getPackageName() + "." + mCategory + "_" + mLanguage;
-
         // Showing progress dialog
-        pDialog = (ProgressBar) getActivity().findViewById(R.id.progress_dialog);
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) pDialog.getLayoutParams();
-        params.setMargins(0, 0, 0, 0);
-        params.addRule(RelativeLayout.CENTER_VERTICAL);
-        pDialog.setLayoutParams(params);
-        pDialog.setVisibility(View.VISIBLE);
-
-        mInstance = CurlSingleton.getInstance(getActivity().getApplicationContext());
-
-        // Create a Programmes Adapter to retrieve the list of programmes
-        programmeList = new ArrayList<>();
-        adapter = new ProgrammesAdapter(getActivity(), programmeList, mCategory);
-        // Local storage :: Retrieve channel listings prefs
-        /** Shared Preference list file key for Channel Lists
-         Pref file for each category
-         Can store:
-         1. Channel list to query
-         2. Genre to filter
-         3. Imdb rating to fetch YES/NO etc.
-         */
-        channelListPref = getActivity().getSharedPreferences(currentPrefKey, 0);
+        if(pDialog == null) {
+            pDialog = (ProgressBar) getActivity().findViewById(R.id.progress_dialog);
+            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) pDialog.getLayoutParams();
+            params.setMargins(0, 0, 0, 0);
+            params.addRule(RelativeLayout.CENTER_VERTICAL);
+            pDialog.setLayoutParams(params);
+            pDialog.setVisibility(View.VISIBLE);
+        }
 
         final ListView listView = getListView();
 
@@ -480,64 +468,6 @@ public class ProgrammesFragment extends ListFragment {
 
         // Bind to our new adapter.
         setListAdapter(adapter);
-
-        if (channelListPref.getAll().size() > 0) {
-            getChannelListFromPref();
-            // Always load channel listing from the prefs, if present
-            if (channelList.size() == 0) {
-                Toast.makeText(getActivity(), R.string.channel_list_empty ,
-                        Toast.LENGTH_LONG).show();
-                return;
-            }
-            loadData(false);
-            return;
-        }
-
-        // Retrieve channel listings fresh
-        String url = new Uri.Builder()
-                .scheme("http")
-                .authority(DATA_SOURCE_URL)
-                .path(CHANNEL_LIST_PATH)
-                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, getTimesResource(mCategory))
-                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, mLanguage)
-                .build()
-                .toString();
-
-
-        JsonRequest channelListRequest = new JsonArrayRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        SharedPreferences.Editor editor = channelListPref.edit();
-                        for (int i = 0; i < response.length(); ++i) {
-                            try {
-                                JSONObject channelObj = (JSONObject) response.get(i);
-                                String channelName = channelObj.getString("name");
-                                channelList.add(channelName);
-                                editor.putBoolean(channelName, true);
-                            } catch (JSONException e) {
-                                Log.d(TAG, e.getMessage());
-                                //e.printStackTrace();
-                            }
-                        }
-                        // commit changes async
-                        editor.apply();
-
-                        loading = true;
-                        loadData(false);
-                    }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // Handle error
-                        if (pDialog.getVisibility() == View.VISIBLE) {
-                            pDialog.setVisibility(View.GONE);
-                        }
-                    }
-                });
-
-        mInstance.addToRequestQueue(channelListRequest);
     }
 
     private void onRefreshHandler() {
@@ -639,6 +569,89 @@ public class ProgrammesFragment extends ListFragment {
         public boolean willChangeBounds() {
             return true;
         }
+    }
+
+    public void initialDataLoad(Bundle savedInstanceState) {
+        Bundle args = getArguments();
+
+        mCategory = args.getString(NavigationDrawerFragment.ITEM_CATEGORY);
+        mLanguage = args.getString(NavigationDrawerFragment.ITEM_LANGUAGE);
+
+        currentPrefKey = getActivity().getPackageName() + "." + mCategory + "_" + mLanguage;
+
+        mInstance = CurlSingleton.getInstance(getActivity().getApplicationContext());
+
+        // Create a Programmes Adapter to retrieve the list of programmes
+        programmeList = new ArrayList<>();
+        adapter = new ProgrammesAdapter(getActivity(), programmeList, mCategory);
+        // Local storage :: Retrieve channel listings prefs
+        /** Shared Preference list file key for Channel Lists
+         Pref file for each category
+         Can store:
+         1. Channel list to query
+         2. Genre to filter
+         3. Imdb rating to fetch YES/NO etc.
+         */
+        channelListPref = getActivity().getSharedPreferences(currentPrefKey, 0);
+
+        if (channelListPref.getAll().size() > 0) {
+            getChannelListFromPref();
+            // Always load channel listing from the prefs, if present
+            if (channelList.size() == 0) {
+                Toast.makeText(getActivity(), R.string.channel_list_empty ,
+                        Toast.LENGTH_LONG).show();
+                return;
+            }
+            loadData(false);
+            return;
+        }
+
+        // Retrieve channel listings fresh
+        String url = new Uri.Builder()
+                .scheme("http")
+                .authority(DATA_SOURCE_URL)
+                .path(CHANNEL_LIST_PATH)
+                .appendQueryParameter(CHANNEL_LIST_GENRE_NAME, getTimesResource(mCategory))
+                .appendQueryParameter(CHANNEL_LIST_LANGUAGE_NAME, mLanguage)
+                .build()
+                .toString();
+
+
+        JsonRequest channelListRequest = new JsonArrayRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        SharedPreferences.Editor editor = channelListPref.edit();
+                        for (int i = 0; i < response.length(); ++i) {
+                            try {
+                                JSONObject channelObj = (JSONObject) response.get(i);
+                                String channelName = channelObj.getString("name");
+                                channelList.add(channelName);
+                                editor.putBoolean(channelName, true);
+                            } catch (JSONException e) {
+                                Log.d(TAG, e.getMessage());
+                                //e.printStackTrace();
+                            }
+                        }
+                        // commit changes async
+                        editor.apply();
+
+                        loading = true;
+                        loadData(false);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        // Handle error
+                        if (pDialog.getVisibility() == View.VISIBLE) {
+                            pDialog.setVisibility(View.GONE);
+                        }
+                    }
+                });
+
+        mInstance.addToRequestQueue(channelListRequest);
+
     }
 
     public ProgrammesFragment() {
